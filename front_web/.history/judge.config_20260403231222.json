@@ -1,0 +1,223 @@
+{
+    "platformName":  "Frontier Omics Judge",
+    "maxUploadSizeMb":  200,
+    "executionTimeoutSeconds":  900,
+    "pythonExecutable":  "python",
+    "benchmarks":  {
+                       "single-cell":  {
+                                           "label":  "Single-Cell RNA-seq",
+                                           "tasks":  [
+                                                         {
+                                                             "id":  "task1",
+                                                             "title":  "Read And Harmonize Metadata",
+                                                             "summary":  "Load the dataset and normalize batch/cell-type labels into obs[\u0027sample\u0027] and obs[\u0027cell_type\u0027]."
+                                                         },
+                                                         {
+                                                             "id":  "task2",
+                                                             "title":  "QC Metrics",
+                                                             "summary":  "Annotate mt/ribo/hb genes and compute Scanpy QC metrics."
+                                                         },
+                                                         {
+                                                             "id":  "task3",
+                                                             "title":  "Cell And Gene Filtering",
+                                                             "summary":  "Filter low-quality cells and low-support genes."
+                                                         },
+                                                         {
+                                                             "id":  "task4",
+                                                             "title":  "Doublet Detection",
+                                                             "summary":  "Produce Scrublet-style doublet predictions and scores."
+                                                         },
+                                                         {
+                                                             "id":  "task5",
+                                                             "title":  "Normalization",
+                                                             "summary":  "Preserve counts, normalize to library size, and log-transform."
+                                                         },
+                                                         {
+                                                             "id":  "task6",
+                                                             "title":  "HVG + PCA",
+                                                             "summary":  "Find highly variable genes and compute PCA embeddings."
+                                                         },
+                                                         {
+                                                             "id":  "task7",
+                                                             "title":  "Neighbors + UMAP",
+                                                             "summary":  "Build the neighborhood graph, cluster, and compute UMAP."
+                                                         },
+                                                         {
+                                                             "id":  "task8",
+                                                             "title":  "Batch Effect Correction",
+                                                             "summary":  "Score integration quality using scib-metrics style aggregate outputs."
+                                                         },
+                                                         {
+                                                             "id":  "task9",
+                                                             "title":  "Clustering Evaluation",
+                                                             "summary":  "Compare predicted clustering labels against cell types."
+                                                         },
+                                                         {
+                                                             "id":  "task10",
+                                                             "title":  "Differential Expression",
+                                                             "summary":  "Compare discovered marker genes against reference marker sets."
+                                                         },
+                                                         {
+                                                             "id":  "task11",
+                                                             "title":  "Trajectory Preservation",
+                                                             "summary":  "Estimate trajectory conservation for integration outputs."
+                                                         }
+                                                     ]
+                                       },
+                       "spatial":  {
+                                       "label":  "Spatial Transcriptomics",
+                                       "tasks":  [
+                                                     {
+                                                         "id":  "task1",
+                                                         "title":  "Read And Spatial Metadata",
+                                                         "summary":  "Load the dataset, ensure sample labels exist, and validate spatial coordinates."
+                                                     },
+                                                     {
+                                                         "id":  "task2",
+                                                         "title":  "QC Metrics",
+                                                         "summary":  "Annotate mt/ribo/hb genes and compute Scanpy QC metrics."
+                                                     },
+                                                     {
+                                                         "id":  "task3",
+                                                         "title":  "Filtering",
+                                                         "summary":  "Filter low-quality spots and low-support genes."
+                                                     },
+                                                     {
+                                                         "id":  "task4",
+                                                         "title":  "Normalization",
+                                                         "summary":  "Preserve counts, normalize, and log-transform the matrix."
+                                                     },
+                                                     {
+                                                         "id":  "task5",
+                                                         "title":  "HVG + PCA",
+                                                         "summary":  "Find highly variable genes and compute PCA embeddings."
+                                                     },
+                                                     {
+                                                         "id":  "task6",
+                                                         "title":  "Neighbors + UMAP",
+                                                         "summary":  "Build the neighborhood graph and compute UMAP."
+                                                     },
+                                                     {
+                                                         "id":  "task7",
+                                                         "title":  "Spatial Graph",
+                                                         "summary":  "Construct a valid symmetric spatial neighborhood graph in obsp[\u0027spatial_connectivities\u0027]."
+                                                     },
+                                                     {
+                                                         "id":  "task8",
+                                                         "title":  "Batch Effect Correction",
+                                                         "summary":  "Score batch correction quality on the spatial dataset embeddings."
+                                                     },
+                                                     {
+                                                         "id":  "task9",
+                                                         "title":  "Clustering + Spatial Autocorrelation",
+                                                         "summary":  "Evaluate clustering against labels and include Global Moran\u0027s I from the spatial graph."
+                                                     },
+                                                     {
+                                                         "id":  "task10",
+                                                         "title":  "Spatially Variable Genes",
+                                                         "summary":  "Compare predicted SVGs against silver SVG reference lists."
+                                                     },
+                                                     {
+                                                         "id":  "task11",
+                                                         "title":  "Neighborhood Enrichment",
+                                                         "summary":  "Compare neighborhood enrichment outputs against a Squidpy-computed reference."
+                                                     }
+                                                 ]
+                                   }
+                   },
+    "datasets":  [
+                     {
+                         "id":  "sce-heart",
+                         "benchmark":  "single-cell",
+                         "label":  "sce_heart",
+                         "datasetPath":  "./data/sce_heart.h5ad",
+                         "markersPath":  "./data/markers/heart_cellmarkers.pkl",
+                         "trajectoryPath":  "./data/sce_heart_trajectory_reference.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ]
+                     },
+                     {
+                         "id":  "pancreas",
+                         "benchmark":  "single-cell",
+                         "label":  "Pancrm_raw",
+                         "datasetPath":  "./data/Pancrm_raw.h5ad",
+                         "markersPath":  "./data/markers/pancreas_cellmarkers.pkl",
+                         "trajectoryPath":  "./data/Pancrm_trajectory_reference.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ]
+                     },
+                     {
+                         "id":  "pbmc",
+                         "benchmark":  "single-cell",
+                         "label":  "HumanPBMC_raw",
+                         "datasetPath":  "./data/HumanPBMC_raw.h5ad",
+                         "markersPath":  "./data/markers/pbmc_cellmarkers.pkl",
+                         "trajectoryPath":  "./data/HumanPBMC_trajectory_reference.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ]
+                     },
+                     {
+                         "id":  "hsc-trajectory",
+                         "benchmark":  "single-cell",
+                         "label":  "hsccell_withpseudo",
+                         "datasetPath":  "./data/hsccell_withpseudo.h5ad",
+                         "markersPath":  "./data/markers/heart_cellmarkers.pkl",
+                         "trajectoryPath":  "./data/hsccell_withpseudo.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ]
+                     },
+                     {
+                         "id":  "stereo-seq",
+                         "benchmark":  "spatial",
+                         "label":  "stereo_seq",
+                         "datasetPath":  "./data/spatial/stereo_seq.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ],
+                         "svgReferences":  {
+                                               "moran":  "./data/spatial/stereo_seq_silver_svgs_moran.pkl",
+                                               "wilcox":  "./data/spatial/stereo_seq_silver_svgs_wilcox.pkl",
+                                               "nb":  "./data/spatial/stereo_seq_silver_svgs_nb.pkl"
+                                           }
+                     },
+                     {
+                         "id":  "human-dlpfc",
+                         "benchmark":  "spatial",
+                         "label":  "human_dlpfc",
+                         "datasetPath":  "./data/spatial/human_dlpfc.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ],
+                         "svgReferences":  {
+                                               "moran":  "./data/spatial/human_dlpfc_silver_svgs_moran.pkl",
+                                               "wilcox":  "./data/spatial/human_dlpfc_silver_svgs_wilcox.pkl",
+                                               "nb":  "./data/spatial/human_dlpfc_silver_svgs_nb.pkl"
+                                           }
+                     },
+                     {
+                         "id":  "human-bc",
+                         "benchmark":  "spatial",
+                         "label":  "human_bc",
+                         "datasetPath":  "./data/spatial/human_bc.h5ad",
+                         "hvgRange":  [
+                                          1900,
+                                          2100
+                                      ],
+                         "svgReferences":  {
+                                               "moran":  "./data/spatial/human_bc_silver_svgs_moran.pkl",
+                                               "wilcox":  "./data/spatial/human_bc_silver_svgs_wilcox.pkl",
+                                               "nb":  "./data/spatial/human_bc_silver_svgs_nb.pkl"
+                                           }
+                     }
+                 ]
+}

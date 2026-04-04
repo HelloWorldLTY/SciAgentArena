@@ -1,0 +1,88 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Benchmark Judge</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <nav class="top-nav">
+        <a class="nav-link" href="/">All Benchmarks</a>
+        <div id="page-links" class="page-links"></div>
+      </nav>
+
+      <header class="hero">
+        <div>
+          <p id="benchmark-eyebrow" class="eyebrow"></p>
+          <h1 id="benchmark-title">Benchmark</h1>
+          <p id="benchmark-copy" class="hero-copy"></p>
+        </div>
+        <div class="hero-card">
+          <span class="hero-stat-label">Evaluation Scope</span>
+          <strong id="task-count">0 Tasks</strong>
+          <span id="benchmark-meta" class="hero-stat-meta"></span>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>New Submission</h2>
+            <p id="submission-copy">Choose a dataset and run the benchmark.</p>
+          </div>
+
+          <form id="submission-form" class="submission-form">
+            <label>
+              <span>Dataset Preset</span>
+              <select id="dataset-select" name="datasetId"></select>
+            </label>
+
+            <div id="override-grid" class="triple-row"></div>
+
+            <label>
+              <span>Upload Dataset File</span>
+              <input id="dataset-file" name="datasetFile" type="file" accept=".h5ad" />
+            </label>
+
+            <fieldset class="mode-switch" id="mode-switch"></fieldset>
+
+            <label id="code-input-group">
+              <span>Python Submission</span>
+              <textarea id="source-code" name="sourceCode" spellcheck="false"></textarea>
+            </label>
+
+            <label id="file-input-group" class="hidden">
+              <span>Upload Evaluated <code>.h5ad</code></span>
+              <input id="h5ad-file" name="h5adFile" type="file" accept=".h5ad" />
+            </label>
+
+            <button class="primary-button" type="submit">Run Evaluation</button>
+            <p id="submit-feedback" class="submit-feedback"></p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Task Catalog</h2>
+            <p id="task-copy">This benchmark page renders its own task set.</p>
+          </div>
+          <div id="task-list" class="task-list"></div>
+        </section>
+      </main>
+
+      <section class="panel result-panel">
+        <div class="panel-header">
+          <h2>Latest Result</h2>
+          <p>Live job status, aggregate score, and per-task evaluation details.</p>
+        </div>
+        <div id="result-shell" class="result-shell empty-state">
+          Submit a pipeline to see job progress and scoring details here.
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/benchmark.js"></script>
+  </body>
+</html>

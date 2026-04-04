@@ -1,0 +1,38 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BioMedArena</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero hero-home">
+        <div>
+          <p class="eyebrow">Benchmark hub for biomedical workflow evaluation</p>
+          <h1>BioMedArena</h1>
+          <p class="hero-copy">
+            Open a dedicated benchmark page for single-cell RNA-seq or spatial transcriptomics,
+            then submit code or <code>.h5ad</code> files for evaluation.
+          </p>
+        </div>
+        <div class="hero-card">
+          <span class="hero-stat-label">Available Pages</span>
+          <strong>2 Benchmarks</strong>
+          <span class="hero-stat-meta">Separate workflows, separate task catalogs, same judge backend.</span>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Benchmark Pages</h2>
+          <p>Choose the task family you want to evaluate.</p>
+        </div>
+        <div id="benchmark-link-list" class="benchmark-link-list"></div>
+      </section>
+    </div>
+
+    <script type="module" src="/home.js"></script>
+  </body>
+</html>
