@@ -25,6 +25,7 @@ const datasetFileInput = document.querySelector('#dataset-file');
 const resultShell = document.querySelector('#result-shell');
 const submitFeedback = document.querySelector('#submit-feedback');
 const taskCount = document.querySelector('#task-count');
+const taskCheckboxes = document.querySelector('#task-checkboxes');
 const overrideGrid = document.querySelector('#override-grid');
 const submissionCopy = document.querySelector('#submission-copy');
 const taskCopy = document.querySelector('#task-copy');
@@ -87,6 +88,17 @@ function renderTasks(tasks) {
       <p>${task.summary}</p>
     </article>
   `).join('');
+  taskCheckboxes.innerHTML = tasks.map((task) => `
+    <label>
+      <input type="checkbox" name="task" value="${task.id}" />
+      ${task.id.toUpperCase()}: ${task.title}
+    </label>
+  `).join('');
+}
+
+function getSelectedTasks() {
+  const checked = [...taskCheckboxes.querySelectorAll('input[type="checkbox"]:checked')];
+  return checked.map((cb) => cb.value);
 }
 
 function renderModeSwitch(modes) {
@@ -118,24 +130,53 @@ function syncModeUi() {
   });
 }
 
+function groupScoresByTask(scoreSummary) {
+  const grouped = {};
+  for (const [key, value] of Object.entries(scoreSummary)) {
+    const sep = key.indexOf('_');
+    const taskId = sep === -1 ? key : key.slice(0, sep);
+    const metric = sep === -1 ? 'score' : key.slice(sep + 1);
+    if (!grouped[taskId]) grouped[taskId] = {};
+    grouped[taskId][metric] = value;
+  }
+  return grouped;
+}
+
+function taskAggregate(metrics) {
+  const vals = Object.values(metrics).filter((v) => Number.isFinite(v));
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+}
+
 function renderStatus(job) {
   const status = job?.status || 'queued';
   const progress = job?.progress?.detail || '';
   const result = job?.result;
   const scoreSummary = result?.score_summary || {};
-  const metricCards = Object.entries(scoreSummary).map(([key, value]) => `
-    <article class="metric-card">
-      <h3>${key}</h3>
-      <strong>${formatScore(value)}</strong>
-    </article>
-  `).join('');
+  const evaluatedTasks = result?.evaluated_tasks || null;
+
+  // Per-task aggregate pills
+  const grouped = groupScoresByTask(scoreSummary);
+  const taskPills = Object.entries(grouped)
+    .sort(([a], [b]) => {
+      const na = parseInt(a.replace('task', ''), 10);
+      const nb = parseInt(b.replace('task', ''), 10);
+      return na - nb;
+    })
+    .map(([taskId, metrics]) => {
+      const agg = taskAggregate(metrics);
+      const cls = agg >= 0.5 ? 'pass' : 'fail';
+      return `<div class="per-task-pill ${cls}"><span>${taskId.toUpperCase()}</span><strong>${formatScore(agg)}</strong></div>`;
+    }).join('');
+
+  // Detailed metric cards (grouped under each task)
   const taskResults = result?.results || {};
   const detailCards = Object.entries(taskResults).map(([key, value]) => `
     <article class="detail-card">
-      <h3>${key}</h3>
+      <h3>${key.toUpperCase()}</h3>
       <pre>${JSON.stringify(value, null, 2)}</pre>
     </article>
   `).join('');
+
   resultShell.classList.remove('empty-state');
   resultShell.innerHTML = `
     <div class="result-hero">
@@ -143,6 +184,7 @@ function renderStatus(job) {
         <span class="status-badge ${status}">${status}</span>
         <h3>${job.datasetLabel || 'Submission'} evaluation</h3>
         <p>${progress}</p>
+        ${evaluatedTasks ? `<p style="font-size:0.85rem;color:var(--muted)">Tasks evaluated: ${evaluatedTasks.map((t) => t.toUpperCase()).join(', ')}</p>` : ''}
       </div>
       <div class="score-pill">Avg ${formatScore(result?.overallAverage || 0)}</div>
     </div>
@@ -164,9 +206,9 @@ function renderStatus(job) {
         <p class="meta-value">${job.updatedAt}</p>
       </article>
     </div>
+    ${taskPills ? `<h3 style="margin:16px 0 4px">Per-Task Scores</h3><div class="per-task-summary">${taskPills}</div>` : ''}
     ${job.error ? `<article class="detail-card"><h3>Error</h3><pre>${job.error}</pre></article>` : ''}
-    ${metricCards ? `<div class="metric-grid">${metricCards}</div>` : ''}
-    ${detailCards ? `<div class="detail-grid">${detailCards}</div>` : ''}
+    ${detailCards ? `<h3 style="margin:16px 0 4px">Task Details</h3><div class="detail-grid">${detailCards}</div>` : ''}
     ${job.logs?.length ? `<article class="detail-card"><h3>Execution Logs</h3><pre>${job.logs.join('\n\n')}</pre></article>` : ''}
   `;
 }
@@ -203,6 +245,11 @@ form.addEventListener('submit', async (event) => {
     for (const field of benchmarkPageContent[state.benchmarkId].overrideFields) {
       const input = document.querySelector(`#${field.id}`);
       formData.append(field.key, input?.value?.trim() || '');
+    }
+
+    const selectedTasks = getSelectedTasks();
+    if (selectedTasks.length > 0) {
+      formData.append('tasks', JSON.stringify(selectedTasks));
     }
 
     const datasetFile = datasetFileInput.files[0];

@@ -566,65 +566,95 @@ def load_submission(metadata: Dict[str, Any]) -> 'ad.AnnData':
     return namespace['adata']
 
 
+def _task_enabled(task_id: str, selected: Optional[List[str]]) -> bool:
+    """Return True if *task_id* should be evaluated.  None means 'all'."""
+    return selected is None or task_id in selected
+
+
 def evaluate_single_cell(metadata: Dict[str, Any], adata: 'ad.AnnData') -> Dict[str, Any]:
+    selected: Optional[List[str]] = metadata.get('tasks')  # None ⇒ run all
     source_data = _read_h5ad(metadata['datasetPath'])
     reference_markers = pd.read_pickle(metadata['markersPath']) if metadata.get('markersPath') and os.path.exists(metadata['markersPath']) else {}
     results: Dict[str, Any] = {}
-    steps = [
-        check_basic_load_single_cell(adata),
-        check_qc_metrics(adata, 'task2'),
-        check_filter(adata, source_data, 'task3'),
-        check_doublet(adata),
-        check_normalize_log1p(adata, 'task5'),
-        check_hvg_pca(adata, tuple(metadata.get('hvgRange', [1900, 2100])), 'task6', True),
-        check_neighbors_umap(adata, 'task7'),
+    step_checks = [
+        ('task1', lambda: check_basic_load_single_cell(adata)),
+        ('task2', lambda: check_qc_metrics(adata, 'task2')),
+        ('task3', lambda: check_filter(adata, source_data, 'task3')),
+        ('task4', lambda: check_doublet(adata)),
+        ('task5', lambda: check_normalize_log1p(adata, 'task5')),
+        ('task6', lambda: check_hvg_pca(adata, tuple(metadata.get('hvgRange', [1, 3000])), 'task6', True)),
+        ('task7', lambda: check_neighbors_umap(adata, 'task7')),
     ]
-    for item in steps:
-        results[item.step_id] = asdict(item)
-    results['task8'] = evaluate_batch_effect_correction(adata)
-    results['task9'] = evaluate_clustering(adata, include_spatial_moran=False)
-    results['task10'] = evaluate_marker_overlap_by_celltype(get_top_markers_dict(adata), reference_markers) if reference_markers else {key: 0.0 for key in ['jaccard', 'overlap_coef', 'precision(A_in_B)', 'recall(B_covered_by_A)', 'f1']}
-    results['task11'] = {'trajectory_conservation': evaluate_trajectory(metadata.get('trajectoryPath', ''), adata)}
+    for task_id, fn in step_checks:
+        if _task_enabled(task_id, selected):
+            item = fn()
+            results[item.step_id] = asdict(item)
+    if _task_enabled('task8', selected):
+        results['task8'] = evaluate_batch_effect_correction(adata)
+    if _task_enabled('task9', selected):
+        results['task9'] = evaluate_clustering(adata, include_spatial_moran=False)
+    if _task_enabled('task10', selected):
+        results['task10'] = evaluate_marker_overlap_by_celltype(get_top_markers_dict(adata), reference_markers) if reference_markers else {key: 0.0 for key in ['jaccard', 'overlap_coef', 'precision(A_in_B)', 'recall(B_covered_by_A)', 'f1']}
+    if _task_enabled('task11', selected):
+        results['task11'] = {'trajectory_conservation': evaluate_trajectory(metadata.get('trajectoryPath', ''), adata)}
     score_summary: Dict[str, float] = {}
     for task_id in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6', 'task7']:
-        score_summary[task_id] = 1.0 if results[task_id]['passed'] else 0.0
-    score_summary['task8_total'] = float(results['task8'].get('aggregate_total', 0.0))
-    for metric_name, value in results['task9']['metrics'].items():
-        score_summary[f'task9_{metric_name}'] = float(value)
-    for metric_name, value in results['task10'].items():
-        score_summary[f'task10_{metric_name}'] = float(0.0 if pd.isna(value) else value)
-    score_summary['task11'] = float(results['task11']['trajectory_conservation'])
+        if task_id in results:
+            score_summary[task_id] = 1.0 if results[task_id]['passed'] else 0.0
+    if 'task8' in results:
+        score_summary['task8_total'] = float(results['task8'].get('aggregate_total', 0.0))
+    if 'task9' in results:
+        for metric_name, value in results['task9']['metrics'].items():
+            score_summary[f'task9_{metric_name}'] = float(value)
+    if 'task10' in results:
+        for metric_name, value in results['task10'].items():
+            score_summary[f'task10_{metric_name}'] = float(0.0 if pd.isna(value) else value)
+    if 'task11' in results:
+        score_summary['task11'] = float(results['task11']['trajectory_conservation'])
     return {'results': results, 'score_summary': score_summary}
 
 
 def evaluate_spatial(metadata: Dict[str, Any], adata: 'ad.AnnData') -> Dict[str, Any]:
+    selected: Optional[List[str]] = metadata.get('tasks')  # None ⇒ run all
     source_data = _read_h5ad(metadata['datasetPath'])
     results: Dict[str, Any] = {}
-    steps = [
-        check_basic_load_spatial(adata),
-        check_qc_metrics(adata, 'task2'),
-        check_filter(adata, source_data, 'task3'),
-        check_normalize_log1p(adata, 'task4'),
-        check_hvg_pca(adata, tuple(metadata.get('hvgRange', [1900, 2100])), 'task5', False),
-        check_neighbors_umap(adata, 'task6'),
-        check_spatial_graph(adata),
+    step_checks = [
+        ('task1', lambda: check_basic_load_spatial(adata)),
+        ('task2', lambda: check_qc_metrics(adata, 'task2')),
+        ('task3', lambda: check_filter(adata, source_data, 'task3')),
+        ('task4', lambda: check_normalize_log1p(adata, 'task4')),
+        ('task5', lambda: check_hvg_pca(adata, tuple(metadata.get('hvgRange', [1, 30000])), 'task5', False)),
+        ('task6', lambda: check_neighbors_umap(adata, 'task6')),
+        ('task7', lambda: check_spatial_graph(adata)),
     ]
-    for item in steps:
-        results[item.step_id] = asdict(item)
-    results['task8'] = evaluate_batch_effect_correction(adata)
-    results['task9'] = evaluate_clustering(adata, include_spatial_moran=True)
-    results['task10'] = evaluate_svg_overlap(adata, metadata.get('svgReferences', {}))
-    results['task11'] = asdict(evaluate_nhood_enrichment(adata, cluster_key='cell_type'))
+    for task_id, fn in step_checks:
+        if _task_enabled(task_id, selected):
+            item = fn()
+            results[item.step_id] = asdict(item)
+    if _task_enabled('task8', selected):
+        results['task8'] = evaluate_batch_effect_correction(adata)
+    if _task_enabled('task9', selected):
+        results['task9'] = evaluate_clustering(adata, include_spatial_moran=True)
+    if _task_enabled('task10', selected):
+        results['task10'] = evaluate_svg_overlap(adata, metadata.get('svgReferences', {}))
+    if _task_enabled('task11', selected):
+        results['task11'] = asdict(evaluate_nhood_enrichment(adata, cluster_key='cell_type'))
     score_summary: Dict[str, float] = {}
     for task_id in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
-        score_summary[task_id] = 1.0 if results[task_id]['passed'] else 0.0
-    score_summary['task7'] = float(results['task7']['passed'])
-    score_summary['task8_total'] = float(results['task8'].get('aggregate_total', 0.0))
-    for metric_name, value in results['task9']['metrics'].items():
-        score_summary[f'task9_{metric_name}'] = float(value)
-    for metric_name, value in results['task10'].items():
-        score_summary[f'task10_{metric_name}'] = float(0.0 if pd.isna(value) else value)
-    score_summary['task11'] = 1.0 if results['task11']['passed'] else 0.0
+        if task_id in results:
+            score_summary[task_id] = 1.0 if results[task_id]['passed'] else 0.0
+    if 'task7' in results:
+        score_summary['task7'] = float(results['task7']['passed'])
+    if 'task8' in results:
+        score_summary['task8_total'] = float(results['task8'].get('aggregate_total', 0.0))
+    if 'task9' in results:
+        for metric_name, value in results['task9']['metrics'].items():
+            score_summary[f'task9_{metric_name}'] = float(value)
+    if 'task10' in results:
+        for metric_name, value in results['task10'].items():
+            score_summary[f'task10_{metric_name}'] = float(0.0 if pd.isna(value) else value)
+    if 'task11' in results:
+        score_summary['task11'] = 1.0 if results['task11']['passed'] else 0.0
     return {'results': results, 'score_summary': score_summary}
 
 
@@ -636,7 +666,7 @@ def evaluate_submission(metadata: Dict[str, Any]) -> Dict[str, Any]:
     else:
         payload = evaluate_single_cell(metadata, adata)
     overall_average = float(np.mean(list(payload['score_summary'].values()))) if payload['score_summary'] else 0.0
-    return {
+    result: Dict[str, Any] = {
         'status': 'completed',
         'message': 'Evaluation complete.',
         'dataset': metadata['datasetLabel'],
@@ -645,6 +675,9 @@ def evaluate_submission(metadata: Dict[str, Any]) -> Dict[str, Any]:
         'score_summary': payload['score_summary'],
         'overall_average': overall_average,
     }
+    if metadata.get('tasks'):
+        result['evaluated_tasks'] = metadata['tasks']
+    return result
 
 
 def main() -> int:

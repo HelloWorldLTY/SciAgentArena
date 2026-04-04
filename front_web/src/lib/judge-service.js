@@ -140,6 +140,19 @@ export class JudgeService {
     const jobDir = path.join(this.jobsDir, jobId);
     await ensureDir(jobDir);
 
+    // Parse selected tasks – accepts a JSON array string or comma-separated ids
+    let selectedTasks = null;
+    if (payload.tasks) {
+      try {
+        selectedTasks = typeof payload.tasks === 'string' ? JSON.parse(payload.tasks) : payload.tasks;
+      } catch {
+        selectedTasks = String(payload.tasks).split(',').map((t) => t.trim()).filter(Boolean);
+      }
+      if (!Array.isArray(selectedTasks) || selectedTasks.length === 0) {
+        selectedTasks = null; // treat empty as "all"
+      }
+    }
+
     const datasetConfig = {
       benchmark: dataset.benchmark,
       datasetLabel: dataset.label,
@@ -148,6 +161,7 @@ export class JudgeService {
       trajectoryPath: normalizeText(payload.customTrajectoryPath) || dataset.trajectoryPath,
       svgReferences: dataset.svgReferences || {},
       hvgRange: dataset.hvgRange || [1900, 2100],
+      tasks: selectedTasks,
     };
 
     const job = {
@@ -267,6 +281,7 @@ export class JudgeService {
       trajectoryPath: datasetConfig.trajectoryPath,
       svgReferences: datasetConfig.svgReferences || {},
       hvgRange: datasetConfig.hvgRange,
+      tasks: datasetConfig.tasks || null,
       outputPath: resultPath,
     };
 

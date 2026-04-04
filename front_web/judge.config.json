@@ -1,6 +1,6 @@
 {
     "platformName":  "BioMedArena",
-    "maxUploadSizeMb":  200,
+    "maxUploadSizeMb":  2000,
     "executionTimeoutSeconds":  900,
     "pythonExecutable":  "python",
     "benchmarks":  {
