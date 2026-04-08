@@ -1,0 +1,5 @@
+# Installation
+
+```
+npm i -g @openai/codex
+```

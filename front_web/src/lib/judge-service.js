@@ -108,7 +108,7 @@ export class JudgeService {
       maxUploadSizeMb: this.config.maxUploadSizeMb,
       executionTimeoutSeconds: this.config.executionTimeoutSeconds,
       benchmarks: this.config.benchmarks,
-      datasets: this.config.datasets.map(({ id, benchmark, label, datasetPath, markersPath, trajectoryPath, svgReferences }) => ({
+      datasets: this.config.datasets.map(({ id, benchmark, label, datasetPath, markersPath, trajectoryPath, svgReferences, controlLabel, topK }) => ({
         id,
         benchmark,
         label,
@@ -116,6 +116,8 @@ export class JudgeService {
         markersPath,
         trajectoryPath,
         svgReferences,
+        controlLabel,
+        topK,
       })),
       submissionModes: [
         { id: 'code', label: 'Python pipeline code' },
@@ -161,6 +163,8 @@ export class JudgeService {
       trajectoryPath: normalizeText(payload.customTrajectoryPath) || dataset.trajectoryPath,
       svgReferences: dataset.svgReferences || {},
       hvgRange: dataset.hvgRange || [1900, 2100],
+      controlLabel: dataset.controlLabel || 'ctrl',
+      topK: dataset.topK || 20,
       tasks: selectedTasks,
     };
 
@@ -281,6 +285,8 @@ export class JudgeService {
       trajectoryPath: datasetConfig.trajectoryPath,
       svgReferences: datasetConfig.svgReferences || {},
       hvgRange: datasetConfig.hvgRange,
+      controlLabel: datasetConfig.controlLabel || 'ctrl',
+      topK: datasetConfig.topK || 20,
       tasks: datasetConfig.tasks || null,
       outputPath: resultPath,
     };

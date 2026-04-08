@@ -7,6 +7,9 @@ function descriptionForBenchmark(id) {
   if (id === 'single-cell') {
     return 'The original single-cell RNA-seq judge with integration, clustering, DEGs, and trajectory scoring.';
   }
+  if (id === 'perturbation-prediction') {
+    return 'Predict gene expression after perturbation. Score with Pearson correlation, R², and top-K DE gene accuracy.';
+  }
   return 'A dedicated benchmark page for this task family.';
 }
 

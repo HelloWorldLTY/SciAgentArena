@@ -546,6 +546,170 @@ def evaluate_nhood_enrichment(adata: 'ad.AnnData', cluster_key: str = 'cell_type
     return StepResult('task11', bool(checks.get('score', 0.0) >= pass_score and not any('Reference computation failed' in err for err in errors)), checks, errors)
 
 
+_CONTROL_LABELS = frozenset({'control', 'ctrl', 'nt', 'non-targeting', 'non_targeting'})
+
+
+def _as_dense(x: Any) -> np.ndarray:
+    if hasattr(x, 'toarray'):
+        return x.toarray()
+    return np.asarray(x)
+
+
+def check_perturbation_data(adata: 'ad.AnnData') -> StepResult:
+    """Validate perturbation data: obs['pert'], obs['cell_type'], control cells."""
+    errors: List[str] = []
+    checks: Dict[str, Any] = {'n_obs': int(adata.n_obs), 'n_vars': int(adata.n_vars)}
+    if 'pert' not in adata.obs:
+        errors.append("Missing obs['pert']")
+    if 'cell_type' not in adata.obs:
+        errors.append("Missing obs['cell_type']")
+    if 'pert' in adata.obs:
+        perts = adata.obs['pert'].astype(str)
+        n_unique = int(perts.nunique())
+        checks['n_perturbations'] = n_unique
+        is_ctrl = perts.str.lower().isin(_CONTROL_LABELS)
+        n_ctrl = int(is_ctrl.sum())
+        checks['n_control_cells'] = n_ctrl
+        n_pert = int((~is_ctrl).sum())
+        checks['n_perturbed_cells'] = n_pert
+        if n_ctrl == 0:
+            errors.append("No control cells found (expected pert labels like 'ctrl', 'control', 'nt')")
+        if n_pert == 0:
+            errors.append('No perturbed cells found')
+    if adata.n_obs <= 0 or adata.n_vars <= 0:
+        errors.append('AnnData has non-positive dimensions')
+    return StepResult('task1', len(errors) == 0, checks, errors)
+
+
+def check_prediction_format(adata: 'ad.AnnData') -> StepResult:
+    """Validate layers['X_pred'] exists with correct shape, and obs['split'] labels."""
+    errors: List[str] = []
+    checks: Dict[str, Any] = {}
+    if 'X_pred' not in adata.layers:
+        errors.append("Missing layers['X_pred'] — store predicted expression here")
+        return StepResult('task2', False, checks, errors)
+    X_pred = _as_dense(adata.layers['X_pred'])
+    checks['X_pred_shape'] = list(X_pred.shape)
+    checks['X_pred_finite'] = bool(np.isfinite(X_pred).all())
+    if X_pred.shape != (adata.n_obs, adata.n_vars):
+        errors.append(f"layers['X_pred'] shape {list(X_pred.shape)} != expected [{adata.n_obs}, {adata.n_vars}]")
+    if not np.isfinite(X_pred).all():
+        errors.append("layers['X_pred'] contains non-finite values")
+    if 'split' not in adata.obs:
+        errors.append("Missing obs['split'] — must contain 'train'/'test' labels to identify held-out perturbations")
+    else:
+        splits = sorted(adata.obs['split'].astype(str).unique().tolist())
+        checks['split_labels'] = splits
+        if 'test' not in splits:
+            errors.append("obs['split'] must contain 'test' labels")
+    return StepResult('task2', len(errors) == 0, checks, errors)
+
+
+def evaluate_perturbation_metrics(adata: 'ad.AnnData', top_k: int = 20) -> Dict[str, Any]:
+    """Compute per-condition perturbation prediction metrics.
+
+    Metrics per condition:
+        pearson_all, pearson_top{K}, r2, mse, mean_delta_err
+    """
+    from scipy.stats import pearsonr
+    from sklearn.metrics import r2_score
+
+    perts = adata.obs['pert'].astype(str)
+    is_ctrl = perts.str.lower().isin(_CONTROL_LABELS)
+
+    ctrl_X = _as_dense(adata[is_ctrl].X)
+    ctrl_mean = ctrl_X.mean(axis=0).ravel()
+
+    # Identify test cells
+    if 'split' in adata.obs:
+        test_mask = adata.obs['split'].astype(str) == 'test'
+    else:
+        test_mask = ~is_ctrl
+
+    test_adata = adata[test_mask]
+    test_perts = test_adata.obs['pert'].astype(str)
+    unique_test_perts = sorted(
+        p for p in test_perts.unique() if p.lower() not in _CONTROL_LABELS
+    )
+
+    if len(unique_test_perts) == 0:
+        return {
+            'metrics': {f'pearson_top{top_k}': 0.0, 'pearson_all': 0.0, 'r2': 0.0, 'mse': 0.0, 'mean_delta_err': 0.0},
+            'per_perturbation': {},
+            'n_test_perturbations': 0,
+        }
+
+    X_pred = _as_dense(test_adata.layers['X_pred'])
+    X_true = _as_dense(test_adata.X)
+
+    rows: List[Dict[str, Any]] = []
+    for pert in unique_test_perts:
+        mask = (test_perts == pert).values
+        pred = X_pred[mask].mean(axis=0).ravel()
+        true = X_true[mask].mean(axis=0).ravel()
+
+        # Top-K DE gene indices by |true - ctrl_mean|
+        delta = np.abs(true - ctrl_mean)
+        topk_idx = np.argsort(delta)[-top_k:][::-1]
+
+        r_all, _ = pearsonr(pred, true)
+        r_topk, _ = pearsonr(pred[topk_idx], true[topk_idx])
+
+        rows.append({
+            'perturbation': pert,
+            'pearson_all': float(r_all),
+            f'pearson_top{top_k}': float(r_topk),
+            'r2': float(r2_score(true, pred)),
+            'mse': float(np.mean((pred - true) ** 2)),
+            'mean_delta_err': float(np.mean(np.abs((pred - ctrl_mean) - (true - ctrl_mean)))),
+        })
+
+    df = pd.DataFrame(rows).set_index('perturbation')
+    avg_metrics = {col: float(df[col].mean()) for col in df.columns}
+
+    return {
+        'metrics': avg_metrics,
+        'per_perturbation': {idx: row.to_dict() for idx, row in df.iterrows()},
+        'n_test_perturbations': len(unique_test_perts),
+    }
+
+
+def evaluate_perturbation_prediction(metadata: Dict[str, Any], adata: 'ad.AnnData') -> Dict[str, Any]:
+    """Orchestrate the perturbation-prediction benchmark (task1–task3)."""
+    selected: Optional[List[str]] = metadata.get('tasks')
+    top_k: int = int(metadata.get('topK', 20))
+    results: Dict[str, Any] = {}
+
+    if _task_enabled('task1', selected):
+        results['task1'] = asdict(check_perturbation_data(adata))
+    if _task_enabled('task2', selected):
+        results['task2'] = asdict(check_prediction_format(adata))
+    if _task_enabled('task3', selected):
+        try:
+            results['task3'] = evaluate_perturbation_metrics(adata, top_k=top_k)
+        except Exception as exc:
+            results['task3'] = {
+                'metrics': {f'pearson_top{top_k}': 0.0, 'pearson_all': 0.0, 'r2': 0.0, 'mse': 0.0, 'mean_delta_err': 0.0},
+                'per_perturbation': {},
+                'n_test_perturbations': 0,
+                'error': str(exc),
+            }
+
+    score_summary: Dict[str, float] = {}
+    for task_id in ['task1', 'task2']:
+        if task_id in results:
+            score_summary[task_id] = 1.0 if results[task_id].get('passed', False) else 0.0
+    if 'task3' in results:
+        metrics = results['task3'].get('metrics', {})
+        # Include correlation and R² in score_summary (interpretable as quality scores).
+        # MSE and mean_delta_err are error metrics kept in detailed results only.
+        for key in ['pearson_all', f'pearson_top{top_k}', 'r2']:
+            if key in metrics:
+                score_summary[f'task3_{key}'] = float(metrics[key])
+
+    return {'results': results, 'score_summary': score_summary}
+
+
 def load_submission(metadata: Dict[str, Any]) -> 'ad.AnnData':
     if metadata['mode'] == 'h5ad':
         return _read_h5ad(metadata['submissionPath'])
@@ -660,10 +824,12 @@ def evaluate_spatial(metadata: Dict[str, Any], adata: 'ad.AnnData') -> Dict[str,
 
 def evaluate_submission(metadata: Dict[str, Any]) -> Dict[str, Any]:
     adata = load_submission(metadata)
-    benchmark = metadata.get('benchmark', 'single-cell')
+    benchmark = metadata.get('benchmark', 'single-cell','perturbation-prediction')
     if benchmark == 'spatial':
         payload = evaluate_spatial(metadata, adata)
-    else:
+    elif benchmark == 'perturbation-prediction':
+        payload = evaluate_perturbation_prediction(metadata, adata)
+    elif benchmark == 'single-cell':
         payload = evaluate_single_cell(metadata, adata)
     overall_average = float(np.mean(list(payload['score_summary'].values()))) if payload['score_summary'] else 0.0
     result: Dict[str, Any] = {

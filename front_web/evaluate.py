@@ -57,6 +57,12 @@ SPATIAL_TASKS = {
     "task11": "Neighborhood Enrichment",
 }
 
+PERTURBATION_PREDICTION_TASKS = {
+    "task1": "Load & Validate Perturbation Data",
+    "task2": "Prediction Format Validation",
+    "task3": "Perturbation Prediction Quality",
+}
+
 
 def load_result(job_dir: Path) -> Optional[Dict[str, Any]]:
     result_path = job_dir / "result.json"
@@ -104,7 +110,12 @@ def print_job_report(job_id: str, result: Dict[str, Any], job_meta: Optional[Dic
     overall = result.get("overall_average", 0.0)
     score_summary = result.get("score_summary", {})
 
-    task_names = SPATIAL_TASKS if benchmark == "spatial" else SINGLE_CELL_TASKS
+    if benchmark == "spatial":
+        task_names = SPATIAL_TASKS
+    elif benchmark == "perturbation-prediction":
+        task_names = PERTURBATION_PREDICTION_TASKS
+    else:
+        task_names = SINGLE_CELL_TASKS
     grouped = group_scores_by_task(score_summary)
 
     mode = job_meta.get("mode", "?") if job_meta else "?"
@@ -195,7 +206,8 @@ def print_pipeline_summary(summaries: List[Dict[str, Any]]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate per-task and pipeline performance from job results.")
     parser.add_argument("--job", type=str, default=None, help="Evaluate a single job by ID.")
-    parser.add_argument("--benchmark", type=str, default=None, choices=["single-cell", "spatial"],
+    parser.add_argument("--benchmark", type=str, default=None,
+                        choices=["single-cell", "spatial", "perturbation-prediction"],
                         help="Filter to a specific benchmark type.")
     parser.add_argument("--jobs-dir", type=str, default=str(JOBS_DIR), help="Path to the jobs directory.")
     parser.add_argument("--json", action="store_true", help="Output results as JSON instead of human-readable tables.")

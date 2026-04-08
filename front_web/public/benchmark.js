@@ -55,6 +55,17 @@ const benchmarkPageContent = {
       { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'Dataset path override', placeholder: 'Optional custom spatial .h5ad input path' },
     ],
   },
+  'perturbation-prediction': {
+    eyebrow: 'Dedicated benchmark page for perturbation prediction',
+    copy: 'Submit a perturbation prediction pipeline. Train on observed perturbations, predict expression for held-out conditions, and score with Pearson correlation, R², and MSE.',
+    meta: 'Perturbation response, gene expression prediction, top-K DE genes, Pearson, R²',
+    submissionCopy: 'Pick a perturbation dataset preset or override the dataset path, then run evaluation.',
+    taskCopy: 'This page is scoped to the perturbation prediction benchmark family.',
+    starterCode: `import numpy as np\nimport scanpy as sc\nfrom sklearn.decomposition import TruncatedSVD\nfrom sklearn.preprocessing import OneHotEncoder`,
+    overrideFields: [
+      { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'Dataset path override', placeholder: 'Optional custom perturbation .h5ad input path' },
+    ],
+  },
 };
 
 function setFeedback(message, isError = false) {

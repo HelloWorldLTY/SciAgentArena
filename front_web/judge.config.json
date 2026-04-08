@@ -123,7 +123,27 @@
                                                          "summary":  "Compare neighborhood enrichment outputs against a Squidpy-computed reference."
                                                      }
                                                  ]
-                                   }
+                                   },
+                       "perturbation-prediction":  {
+                                                       "label":  "Perturbation Prediction",
+                                                       "tasks":  [
+                                                                     {
+                                                                         "id":  "task1",
+                                                                         "title":  "Load & Validate Perturbation Data",
+                                                                         "summary":  "Load the dataset and validate obs['pert'], obs['cell_type'], and presence of control cells."
+                                                                     },
+                                                                     {
+                                                                         "id":  "task2",
+                                                                         "title":  "Prediction Format Validation",
+                                                                         "summary":  "Verify that predicted expression is stored in layers['X_pred'] with correct shape, finite values, and obs['split'] labels."
+                                                                     },
+                                                                     {
+                                                                         "id":  "task3",
+                                                                         "title":  "Perturbation Prediction Quality",
+                                                                         "summary":  "Evaluate prediction accuracy per condition using Pearson correlation (all genes and top-K DE genes), R², MSE, and mean delta error."
+                                                                     }
+                                                                 ]
+                                                   }
                    },
     "datasets":  [
                      {
@@ -218,6 +238,22 @@
                                                "wilcox":  "./data/spatial/human_bc_silver_svgs_wilcox.pkl",
                                                "nb":  "./data/spatial/human_bc_silver_svgs_nb.pkl"
                                            }
+                     },
+                     {
+                         "id":  "norman2019",
+                         "benchmark":  "perturbation-prediction",
+                         "label":  "Norman2019",
+                         "datasetPath":  "./data/perturbation/norman2019.h5ad",
+                         "controlLabel":  "ctrl",
+                         "topK":  20
+                     },
+                     {
+                         "id":  "adamson2016",
+                         "benchmark":  "perturbation-prediction",
+                         "label":  "Adamson2016",
+                         "datasetPath":  "./data/perturbation/adamson2016.h5ad",
+                         "controlLabel":  "ctrl",
+                         "topK":  20
                      }
                  ]
 }
