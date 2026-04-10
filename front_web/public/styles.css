@@ -18,7 +18,7 @@
 
 body {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, "Arial", sans-serif;
   color: var(--text);
   background: var(--bg-accent);
 }
