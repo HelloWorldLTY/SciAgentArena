@@ -1,0 +1,4 @@
+You are an expert in bioinformatics. Please write Python code that reads
+a single-cell dataset whose path is stored in a variable named `path`.
+If the object has a batch label, store it as `adata.obs["sample"]`.
+If it has a cell-type label, store it as `adata.obs["cell_type"]`.

@@ -1,0 +1,2 @@
+openai>=1.40
+tooluniverse>=0.2

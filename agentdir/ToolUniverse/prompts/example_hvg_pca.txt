@@ -1,0 +1,5 @@
+Please write concise, executable Python code that takes an existing
+AnnData object `adata` with batch information stored in `sample` and:
+
+1. Identifies highly variable genes using sc.pp.highly_variable_genes.
+2. Runs PCA on the filtered features.

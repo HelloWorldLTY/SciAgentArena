@@ -1,0 +1,63 @@
+Finish a spatial transcriptomics task analysis step by step and save
+the resulting code into one onestep.py. Output only executable Python
+with brief comments.
+
+# TASK T1
+You are an expert in bioinformatics. Write code to read a spatial
+transcriptomic `.h5ad` dataset whose path is stored in a variable
+named `path`. If it has a batch label, store it as
+`adata.obs["sample"]`. If it has a cell-type label, store it as
+`adata.obs["cell_type"]`.
+
+# TASK T2
+Annotate gene categories and compute QC metrics for `adata`. Mark
+mitochondrial genes ("MT-" human, "Mt-" mouse), ribosomal genes
+(prefix "RPS" or "RPL"), and hemoglobin genes (regex ^HB excluding
+HBP). Call `sc.pp.calculate_qc_metrics(qc_vars=["mt","ribo","hb"],
+log1p=True, inplace=True)`.
+
+# TASK T3
+Perform basic spatial-transcriptomics filtering on `adata` for both
+cells and genes.
+
+# TASK T4
+Preprocess `adata` by: (1) saving counts into
+`adata.layers["counts"]`, (2) normalizing total counts per cell to the
+median library size, (3) log1p transformation.
+
+# TASK T5
+`adata` has batch information in `sample`. Identify highly variable
+genes with `sc.pp.highly_variable_genes` and run PCA on the filtered
+features.
+
+# TASK T6
+Compute the k-nearest-neighbor graph, run Leiden clustering, and
+compute a UMAP embedding. Store the weighted adjacency matrix in
+`adata.obsp["connectivities"]`.
+
+# TASK T7
+Build a spatial neighborhood graph with `coord_type="generic"`,
+`n_neighs=8`. Store the weighted adjacency matrix in
+`adata.obsp["spatial_connectivities"]`.
+
+# TASK T8
+Run the best batch-effect correction method for `adata` with batch
+labels stored in `adata.obs["sample"]`. Store the corrected embedding
+in `adata.obsm["X_pca"]`.
+
+# TASK T9
+Run the best spatially aware domain detection method on `adata` and
+store the clustering labels as `adata.obs["cluster"]`.
+
+# TASK T10
+Run the best spatially variable gene detection method on `adata`.
+Return the list as `adata.uns["svg_global"]`.
+
+# TASK T11
+Run neighborhood enrichment using `cell_type` as the cluster key.
+Store the z-score at
+`adata.uns["cell_type_nhood_enrichment"]["zscore"]` and the count at
+`adata.uns["cell_type_nhood_enrichment"]["count"]`.
+
+# TASK SAVE
+Save the resulting AnnData object to "../pipeline_outputs/output.h5ad".

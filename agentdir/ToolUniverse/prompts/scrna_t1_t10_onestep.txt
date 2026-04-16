@@ -1,0 +1,50 @@
+Finish a single-cell RNA-seq task analysis step by step and save the
+resulting code into one onestep.py. Output only executable Python with
+brief comments.
+
+# TASK T1
+You are an expert in bioinformatics. Write code to read a single-cell
+dataset whose path is stored in the `path` variable. If it has a batch
+label, store it as `adata.obs["sample"]`. If it has a cell-type label,
+store it as `adata.obs["cell_type"]`.
+
+# TASK T2
+Annotate gene categories and compute QC metrics for an AnnData object
+called `adata`. Mark mitochondrial genes ("MT-" human, "Mt-" mouse).
+Mark ribosomal genes (prefix "RPS" or "RPL"). Mark hemoglobin genes
+(regex ^HB, excluding pseudogenes like HBP). Store each as boolean
+columns in `adata.var`. Call `sc.pp.calculate_qc_metrics` with
+`qc_vars=["mt","ribo","hb"]`, `log1p=True`, `inplace=True`.
+
+# TASK T3
+Perform basic single-cell RNA-seq filtering on `adata` for both cells
+and genes.
+
+# TASK T4
+Run doublet detection with Scrublet on `adata`.
+
+# TASK T5
+Preprocess `adata` by: (1) saving the raw counts into
+`adata.layers["counts"]`, (2) normalizing total counts per cell to the
+median library size, (3) applying log1p transformation.
+
+# TASK T6
+`adata` has batch information stored in `sample`. Identify highly
+variable genes with `sc.pp.highly_variable_genes` and then run PCA on
+the filtered features.
+
+# TASK T7
+Compute the k-nearest-neighbor graph, run Leiden clustering, and
+compute a UMAP embedding.
+
+# TASK T8
+Run the best batch-effect correction method for `adata`, with batch
+labels stored in `adata.obs["sample"]`.
+
+# TASK T9
+Run the best clustering method for `adata` and store the cluster
+labels as `adata.obs["cluster"]`.
+
+# TASK T10
+Run the best differential expression method across cell types for
+`adata`.
