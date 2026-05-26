@@ -66,6 +66,147 @@ const benchmarkPageContent = {
       { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'Dataset path override', placeholder: 'Optional custom perturbation .h5ad input path' },
     ],
   },
+  ehr: {
+    eyebrow: 'Dedicated benchmark page for Electronic Health Records',
+    copy: 'Submit an EHR analysis pipeline. Load structured patient records, normalize clinical codes, extract temporal events, predict outcomes, and score treatment recommendations — all evaluated by F1 between predicted and reference solutions.',
+    meta: 'Clinical codes, ICD-10, temporal events, readmission prediction, treatment F1',
+    submissionCopy: 'Pick an EHR dataset preset or override the data path, then run the clinical evaluation pipeline.',
+    taskCopy: 'This page is scoped to the Electronic Health Records benchmark family.',
+    starterCode: `import pandas as pd
+import numpy as np
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
+
+# Load EHR dataset
+df = pd.read_csv(path)
+
+# Normalize clinical codes (ICD-10 mappings)
+# Extract temporal event sequences
+# Train outcome prediction model
+# Generate treatment recommendations
+
+# Output must be a DataFrame with columns:
+#   patient_id, predicted_outcome, recommended_treatments
+`,
+    overrideFields: [
+      { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'EHR data path override', placeholder: 'Optional custom EHR CSV/parquet input path' },
+      { id: 'custom-markers-path', key: 'customMarkersPath', label: 'Reference labels path override', placeholder: 'Optional reference labels CSV path' },
+    ],
+  },
+  'cross-domain': {
+    eyebrow: 'Dedicated benchmark page for Cross Domain Analysis',
+    copy: 'Submit a cross-domain genomics pipeline. Map eQTLs and compare predicted (gene, variant) pairs against a reference set using per-gene precision, recall, and F1. Multi-omics association tasks are scored by exact-match accuracy.',
+    meta: 'eQTL mapping, gene-variant pairs, precision/recall/F1, multi-omics, exact-match accuracy',
+    submissionCopy: 'Pick a cross-domain dataset preset or override the prediction and reference file paths, then run evaluation.',
+    taskCopy: 'This page is scoped to the Cross Domain Analysis benchmark family.',
+    starterCode: `import pandas as pd
+import numpy as np
+
+# Load your computed eQTL results
+pred = pd.read_csv(pred_path)
+
+# Required columns: gene_id (or gene/gene_name), variant_id (or chrom+pos+ref+alt)
+# Optional: pvalue, beta/slope
+
+# Filter by significance threshold
+pred_filtered = pred[pred['pvalue'] <= 1e-5].copy()
+
+# Output must be a CSV with at minimum:
+#   gene_id, variant_id
+# Optionally include: pvalue, beta
+pred_filtered[['gene_id', 'variant_id', 'pvalue', 'beta']].to_csv(output_path, index=False)
+`,
+    overrideFields: [
+      { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'Prediction file path override', placeholder: 'Optional computed eQTL results CSV/TSV path' },
+      { id: 'custom-markers-path', key: 'customMarkersPath', label: 'Reference file path override', placeholder: 'Optional reference eQTL set CSV/TSV path' },
+    ],
+  },
+  'drug-discovery': {
+    eyebrow: 'Dedicated benchmark page for Drug Discovery',
+    copy: 'Submit a drug discovery pipeline. Predict ADMET properties, protein-ligand binding affinities, and drug-target interactions — scored against experimental reference values. Lead optimization and synergy prediction tasks use ranking and correlation metrics.',
+    meta: 'ADMET, binding affinity, lead optimization, drug-target interaction, synergy',
+    submissionCopy: 'Pick a drug discovery dataset preset or override the compound and reference file paths, then run evaluation.',
+    taskCopy: 'This page is scoped to the Drug Discovery benchmark family.',
+    starterCode: `import pandas as pd
+import numpy as np
+from rdkit import Chem
+from rdkit.Chem import Descriptors, QED
+
+# Load compound dataset
+compounds = pd.read_csv(path)
+
+# Compute molecular descriptors
+def compute_features(smiles):
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    return {
+        'MW': Descriptors.MolWt(mol),
+        'LogP': Descriptors.MolLogP(mol),
+        'HBD': Descriptors.NumHDonors(mol),
+        'HBA': Descriptors.NumHAcceptors(mol),
+        'QED': QED.qed(mol),
+        'TPSA': Descriptors.TPSA(mol),
+    }
+
+features = compounds['smiles'].apply(compute_features).apply(pd.Series)
+
+# Train property prediction model
+# from sklearn.ensemble import RandomForestRegressor
+# model = RandomForestRegressor(n_estimators=100, random_state=42)
+# model.fit(X_train, y_train)
+# predictions = model.predict(X_test)
+`,
+    overrideFields: [
+      { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'Compound data path override', placeholder: 'Optional compounds CSV path (must include SMILES column)' },
+      { id: 'custom-markers-path', key: 'customMarkersPath', label: 'Reference data path override', placeholder: 'Optional experimental reference values CSV path' },
+    ],
+  },
+  'statistical-genetics': {
+    eyebrow: 'Dedicated benchmark page for Statistical Genetics',
+    copy: 'Submit a statistical genetics pipeline covering Mendelian Randomization (16 methods across 6 tasks) and Polygenic Risk Score computation (5 tasks). Evaluated on real GWAS summary statistics with checks for method correctness, IV selection, and predictive accuracy.',
+    meta: 'MR, IVW, Egger, MR-APSS, CAUSE, PRS, LDpred2, PRS-CS, incremental R², AUC',
+    submissionCopy: 'Pick a genetics dataset preset or override the dataset path, then run the MR or PRS evaluation pipeline.',
+    taskCopy: 'This page covers both Mendelian Randomization (Tasks 1-6) and Polygenic Risk Score (Tasks 7-11) benchmarks.',
+    starterCode: `import json
+import re
+import numpy as np
+import pandas as pd
+from pathlib import Path
+from scipy.stats import pearsonr
+
+# ── Mendelian Randomization pipeline ──────────────────────────────────────
+# Configure paths
+AGENT_OUT = Path("./output")
+DATASET   = "dataset1"
+DATASET_DIR = AGENT_OUT / DATASET
+
+# Expected: 16 MR methods across 4 IV p-value thresholds
+EXPECTED_METHODS = {
+    "IVW_fe", "IVW", "dIVW", "Egger", "RAPS",
+    "Weighted-median", "Weighted-mode", "MR-PRESSO", "MRMix",
+    "cML-MA", "MR-Robust", "MR-Lasso", "MR-ConMix", "MR-CUE",
+    "CAUSE", "MR-APSS"
+}
+EXPECTED_THRESHOLDS = {5e-08, 5e-07, 5e-06, 5e-05}
+
+# Step 1: Format GWAS summary statistics (see Task 2)
+# Step 2: Estimate background parameters for MR-APSS (see Task 3)
+# Step 3: LD clumping for IV selection via PLINK (see Task 4)
+# Step 4: Run all 16 MR methods (see Task 5)
+# Step 5: Aggregate results and compute Type-I error rates (see Task 6)
+
+# ── Polygenic Risk Score pipeline ─────────────────────────────────────────
+# Supported methods: PRS-CS, LDpred2, SBayesR, lassosum2
+# Output: weights_merged.txt + prs_scores.sscore per trait
+TRAITS = ["BMI", "Height", "T2D"]
+`,
+    overrideFields: [
+      { id: 'custom-dataset-path', key: 'customDatasetPath', label: 'Agent output directory override', placeholder: 'Optional path to agent output directory' },
+      { id: 'custom-markers-path', key: 'customMarkersPath', label: 'Reference data path override', placeholder: 'Optional path to MR paper reference or PRS gold standard' },
+      { id: 'custom-trajectory-path', key: 'customTrajectoryPath', label: 'Dataset ID override', placeholder: 'Optional dataset ID (e.g. dataset1 through dataset7)' },
+    ],
+  },
 };
 
 function setFeedback(message, isError = false) {

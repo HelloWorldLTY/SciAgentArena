@@ -1,0 +1,1 @@
+EHR metrics are computed based on F1 scores between observed solutions and predicted solutions.

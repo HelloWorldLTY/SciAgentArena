@@ -10,6 +10,18 @@ function descriptionForBenchmark(id) {
   if (id === 'perturbation-prediction') {
     return 'Predict gene expression after perturbation. Score with Pearson correlation, R², and top-K DE gene accuracy.';
   }
+  if (id === 'ehr') {
+    return 'Electronic Health Record analysis — clinical code normalization, temporal event extraction, outcome prediction, and treatment recommendation scored by F1.';
+  }
+  if (id === 'cross-domain') {
+    return 'Cross-domain genomics — eQTL mapping evaluated by per-gene precision/recall/F1 and multi-omics association by exact-match accuracy against reference calls.';
+  }
+  if (id === 'drug-discovery') {
+    return 'Drug discovery pipeline — ADMET prediction, protein-ligand binding affinity, lead optimization, drug-target interaction, and combination synergy scoring.';
+  }
+  if (id === 'statistical-genetics') {
+    return 'Statistical genetics — Mendelian Randomization (16 methods, 6 tasks) and Polygenic Risk Score computation (5 tasks) evaluated on real GWAS summary statistics.';
+  }
   return 'A dedicated benchmark page for this task family.';
 }
 

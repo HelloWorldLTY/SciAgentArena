@@ -143,7 +143,142 @@
                                                                          "summary":  "Evaluate prediction accuracy per condition using Pearson correlation (all genes and top-K DE genes), R², MSE, and mean delta error."
                                                                      }
                                                                  ]
-                                                   }
+                                                   },
+                       "ehr":  {
+                                   "label":  "Electronic Health Records",
+                                   "tasks":  [
+                                                 {
+                                                     "id":  "task1",
+                                                     "title":  "Clinical Data Loading & Validation",
+                                                     "summary":  "Load structured EHR data and validate patient record format, required fields, and data integrity constraints."
+                                                 },
+                                                 {
+                                                     "id":  "task2",
+                                                     "title":  "Medical Code Normalization",
+                                                     "summary":  "Map raw clinical codes to standardized terminologies (ICD-10, SNOMED-CT, RxNorm) and validate against reference code sets."
+                                                 },
+                                                 {
+                                                     "id":  "task3",
+                                                     "title":  "Temporal Event Extraction",
+                                                     "summary":  "Extract and sequence clinical events from patient timelines, including admissions, diagnoses, medications, and procedures."
+                                                 },
+                                                 {
+                                                     "id":  "task4",
+                                                     "title":  "Clinical Outcome Prediction",
+                                                     "summary":  "Predict patient outcomes (30-day readmission, in-hospital mortality) from EHR features; scored by F1 between predicted and observed outcomes."
+                                                 },
+                                                 {
+                                                     "id":  "task5",
+                                                     "title":  "Treatment Recommendation",
+                                                     "summary":  "Match predicted treatment plans against reference interventions using F1 score on the set of recommended clinical actions."
+                                                 }
+                                             ]
+                               },
+                       "cross-domain":  {
+                                            "label":  "Cross Domain Analysis",
+                                            "tasks":  [
+                                                          {
+                                                              "id":  "task1",
+                                                              "title":  "eQTL Mapping & Evaluation",
+                                                              "summary":  "Identify expression quantitative trait loci and compare predicted (gene, variant) pairs against a reference eQTL set using per-gene precision, recall, and F1."
+                                                          },
+                                                          {
+                                                              "id":  "task2",
+                                                              "title":  "Cross-Omics Association",
+                                                              "summary":  "Integrate multi-omics layers (genomics, transcriptomics, epigenomics) and evaluate cross-domain variant-gene associations by exact-match accuracy against reference calls."
+                                                          }
+                                                      ]
+                                        },
+                       "drug-discovery":  {
+                                              "label":  "Drug Discovery",
+                                              "tasks":  [
+                                                            {
+                                                                "id":  "task1",
+                                                                "title":  "Molecular Property Prediction",
+                                                                "summary":  "Predict ADMET properties (absorption, distribution, metabolism, excretion, toxicity) for candidate compounds and score against experimental reference values."
+                                                            },
+                                                            {
+                                                                "id":  "task2",
+                                                                "title":  "Protein-Ligand Binding Affinity",
+                                                                "summary":  "Score binding affinity between small-molecule drug candidates and target proteins; evaluate by Pearson correlation and ranking metrics against experimentally determined values."
+                                                            },
+                                                            {
+                                                                "id":  "task3",
+                                                                "title":  "Lead Compound Optimization",
+                                                                "summary":  "Generate and rank optimized molecular variants by drug-likeness (QED, SA score, Lipinski filters) and predicted potency improvement over the starting scaffold."
+                                                            },
+                                                            {
+                                                                "id":  "task4",
+                                                                "title":  "Drug-Target Interaction Prediction",
+                                                                "summary":  "Predict interaction profiles between drug libraries and protein targets; score AUROC and AUPRC against curated positive/negative interaction benchmarks."
+                                                            },
+                                                            {
+                                                                "id":  "task5",
+                                                                "title":  "Drug Combination Synergy",
+                                                                "summary":  "Predict synergistic drug combinations for therapeutic targets and compare predicted synergy scores against experimental Bliss/Loewe synergy measurements."
+                                                            }
+                                                        ]
+                                          },
+                       "statistical-genetics":  {
+                                                    "label":  "Statistical Genetics",
+                                                    "tasks":  [
+                                                                  {
+                                                                      "id":  "task1",
+                                                                      "title":  "MR Method Documentation & Input Validation",
+                                                                      "summary":  "Document the 16 Mendelian Randomization methods, declare IV p-value thresholds, and validate GWAS input files and supporting reference data."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task2",
+                                                                      "title":  "GWAS QC & Formatting",
+                                                                      "summary":  "Harmonize raw GWAS summary statistics: HapMap 3 restriction, allele QC, MHC exclusion, MAF/INFO filtering, and chi-square outlier removal."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task3",
+                                                                      "title":  "Background Parameter Estimation",
+                                                                      "summary":  "Estimate LDSC-based Omega and C matrices for MR-APSS using LD-score regression with h2.fix.intercept=FALSE across all exposure-outcome pairs."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task4",
+                                                                      "title":  "IV Selection via PLINK LD Clumping",
+                                                                      "summary":  "Select independent genetic instruments by PLINK LD clumping (kb=1000, r²=0.001) across four IV p-value thresholds per exposure."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task5",
+                                                                      "title":  "Run 16 MR Methods",
+                                                                      "summary":  "Execute all 16 Mendelian Randomization methods (IVW, Egger, RAPS, CAUSE, MR-APSS, etc.) and produce per-pair result files with beta, SE, p-value, and IV count."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task6",
+                                                                      "title":  "MR Results Aggregation & Evaluation",
+                                                                      "summary":  "Aggregate MR results, compute Type-I error rates and accuracy metrics per method and IV threshold, and produce a ranked summary of the 16 methods."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task7",
+                                                                      "title":  "PRS Method Selection & Validation",
+                                                                      "summary":  "Select a polygenic risk score method (PRS-CS, LDpred2, SBayesR, etc.), document the method card, and validate all required input files including target genotypes and phenotypes."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task8",
+                                                                      "title":  "GWAS Sumstats Preprocessing for PRS",
+                                                                      "summary":  "Clean, harmonize, and validate GWAS summary statistics for PRS computation: remove duplicates, check allele alignment against target .bim, and subset phenotype/covariate files."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task9",
+                                                                      "title":  "PRS Computation",
+                                                                      "summary":  "Execute the selected PRS method to generate per-chromosome posterior weights, merge them, and produce PLINK2 .sscore outputs; validate scores against gold-standard Pearson r thresholds."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task10",
+                                                                      "title":  "SLURM Pipeline Execution",
+                                                                      "summary":  "Submit and monitor the three-stage SLURM pipeline (preprocessing, weights, scoring) with proper SBATCH headers, timing/memory logs, and failure classification."
+                                                                  },
+                                                                  {
+                                                                      "id":  "task11",
+                                                                      "title":  "PRS Predictive Evaluation",
+                                                                      "summary":  "Assess PRS predictive performance for continuous and binary traits using incremental R², AUC, and Nagelkerke R²; produce an evaluation_summary.tsv with per-trait results."
+                                                                  }
+                                                              ]
+                                                }
                    },
     "datasets":  [
                      {
@@ -254,6 +389,62 @@
                          "datasetPath":  "./data/perturbation/adamson2016.h5ad",
                          "controlLabel":  "ctrl",
                          "topK":  20
+                     },
+                     {
+                         "id":  "mimic-iii",
+                         "benchmark":  "ehr",
+                         "label":  "MIMIC-III",
+                         "datasetPath":  "./data/ehr/mimic_iii_sample.csv",
+                         "referenceLabelsPath":  "./data/ehr/mimic_iii_reference_labels.csv"
+                     },
+                     {
+                         "id":  "eicu",
+                         "benchmark":  "ehr",
+                         "label":  "eICU",
+                         "datasetPath":  "./data/ehr/eicu_sample.csv",
+                         "referenceLabelsPath":  "./data/ehr/eicu_reference_labels.csv"
+                     },
+                     {
+                         "id":  "gtex-blood-eqtl",
+                         "benchmark":  "cross-domain",
+                         "label":  "GTEx Blood eQTL",
+                         "datasetPath":  "./data/cross_domain/gtex_blood_pred.csv",
+                         "referenceDataPath":  "./data/cross_domain/gtex_blood_ref.csv"
+                     },
+                     {
+                         "id":  "tcga-multiomics",
+                         "benchmark":  "cross-domain",
+                         "label":  "TCGA Multi-Omics",
+                         "datasetPath":  "./data/cross_domain/tcga_multiomics.csv",
+                         "referenceDataPath":  "./data/cross_domain/tcga_multiomics_ref.csv"
+                     },
+                     {
+                         "id":  "chembl-admet",
+                         "benchmark":  "drug-discovery",
+                         "label":  "ChEMBL ADMET",
+                         "datasetPath":  "./data/drugdesign/chembl_admet_compounds.csv",
+                         "referenceDataPath":  "./data/drugdesign/chembl_admet_reference.csv"
+                     },
+                     {
+                         "id":  "pdbbind",
+                         "benchmark":  "drug-discovery",
+                         "label":  "PDBbind Binding Affinity",
+                         "datasetPath":  "./data/drugdesign/pdbbind_complexes.csv",
+                         "referenceDataPath":  "./data/drugdesign/pdbbind_affinities.csv"
+                     },
+                     {
+                         "id":  "mr-benchmark-d1",
+                         "benchmark":  "statistical-genetics",
+                         "label":  "MR Benchmark Dataset 1",
+                         "datasetPath":  "./data/genetics/mr/dataset1",
+                         "referenceDataPath":  "./data/genetics/mr/paper_reference"
+                     },
+                     {
+                         "id":  "prs-benchmark-eur",
+                         "benchmark":  "statistical-genetics",
+                         "label":  "PRS Benchmark (EUR)",
+                         "datasetPath":  "./data/genetics/prs/single_ancestry",
+                         "referenceDataPath":  "./data/genetics/prs/ref"
                      }
                  ]
 }
