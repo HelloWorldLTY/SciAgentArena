@@ -1,0 +1,41 @@
+{
+  "id": "ana_05_temporal_split",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of 500 molecules with SMILES, pIC50 values, and date_tested. Perform a temporal train/test split: training set = all molecules tested before 2023-01-01, test set = all molecules tested on or after 2023-01-01. Train a Random Forest regressor (n_estimators=100, random_state=42) to predict pIC50 from Morgan fingerprints (radius=2, nBits=1024). Compute the RMSE on the test set.\n\nStore these variables:\n- `n_train` (int): number of training molecules\n- `n_test` (int): number of test molecules\n- `test_rmse` (float): RMSE on the test set\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: SMILES, pIC50, date_tested.",
+  "input": {
+    "file_path": "tasks_interactive/data/project_data.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_train",
+        "expected": 400,
+        "label": "n_train_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_test",
+        "expected": 100,
+        "label": "n_test_value"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "test_rmse",
+        "min": 0.3,
+        "max": 2.0,
+        "label": "test_rmse_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": ["temporal_split", "random_forest", "morgan_fingerprints", "RMSE"]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "id": "val_C2_11_prediction_vs_measurement",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV of 10 compounds (columns: Compound_ID, SMILES, measured_logp) where the measured value comes from a single in-house measurement per compound. Before using these values in a QSAR model, spot-check them against ADMETAI's logP predictor (an ML model). Any compound where `|measured - predicted| > 1.0` should be flagged as untrustworthy.\n\nFor the first compound in the CSV, store:\n- `predicted_value` (float): ADMETAI logP prediction.\n- `measured_value` (float): from the CSV.\n- `abs_log_delta` (float): `abs(measured_value - predicted_value)`.\n- `prediction_trustworthy` (bool): True iff `abs_log_delta < 1.0`.\n\nAlso set the shared diagnostic variables. For the whole panel, if any compound has `abs_log_delta > 1.0`, set `failure_mode='prediction_measurement_mismatch'`.\n\nInput CSV at `_TASK_INPUT['file_path']`.\n\nShared diagnostic variables required for this Competency 5 suite:\n- `conclusion_status` (str): choose one value from `tasks_interactive/data/c5_allowed_values.json`.\n- `failure_mode` (str): choose one value from the shared failure-mode pool; use `none` only if the data are clean.\n- `recommended_action` (str): choose one value from the shared recommended-action pool.\n- `issue_detected` (str): concise evidence for the defect, or `none` if no issue is detected.\n",
+  "input": {
+    "file_path": "tasks_interactive/data/val_11_measured_vs_predicted.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 600,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "predicted_value",
+        "min": -10.0,
+        "max": 15.0,
+        "label": "computes_abs_log_delta",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "abs_log_delta",
+        "min": 0.0,
+        "max": 15.0,
+        "label": "delta_plausible",
+        "weight": 1.0,
+        "requires": "computes_abs_log_delta"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "prediction_measurement_mismatch",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "delta_plausible"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "answer_with_caveat",
+          "inconclusive_data_quality",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion_status",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "admetai_prediction",
+      "model_vs_measurement",
+      "tool_use"
+    ],
+    "ground_truth_failure_mode": "prediction_measurement_mismatch",
+    "requires_external_lookup": true,
+    "expected_tool_substrings": [
+      "ADMETAI",
+      "SwissADME"
+    ],
+    "notes": "Generator inserts at least one compound with deliberately outlying measured value to force the mismatch conclusion."
+  }
+}

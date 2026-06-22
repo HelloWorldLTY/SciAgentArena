@@ -1,0 +1,80 @@
+{
+  "id": "val_C2_09_retracted_assay",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV of 15 compound activity measurements all from a single ChEMBL assay (columns: Compound_ChEMBL_ID, pIC50, Assay_ChEMBL_ID). Before drawing any SAR conclusions, check the assay's confidence score / validation flag in ChEMBL. ChEMBL flags low-confidence assays (confidence_score <= 4 on the 0-9 scale) as unreliable for structure-activity comparisons.\n\nStore:\n- `assay_confidence_score` (int): the confidence_score reported by ChEMBL for the assay.\n- `is_high_confidence` (bool): `assay_confidence_score >= 7`.\n- `n_compounds_affected` (int): number of rows in the CSV (since all share the assay).\n\nAlso set the shared diagnostic variables.\n\nInput CSV at `_TASK_INPUT['file_path']`.\n\nShared diagnostic variables required for this Competency 5 suite:\n- `conclusion_status` (str): choose one value from `tasks_interactive/data/c5_allowed_values.json`.\n- `failure_mode` (str): choose one value from the shared failure-mode pool; use `none` only if the data are clean.\n- `recommended_action` (str): choose one value from the shared recommended-action pool.\n- `issue_detected` (str): concise evidence for the defect, or `none` if no issue is detected.\n",
+  "input": {
+    "file_path": "tasks_interactive/data/val_09_low_conf_assay.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "assay_confidence_score",
+        "min": 0,
+        "max": 4,
+        "label": "computes_assay_confidence",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "is_high_confidence",
+        "expected": false,
+        "label": "detects_low_confidence",
+        "weight": 2.0,
+        "requires": "computes_assay_confidence"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "low_confidence_assay",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "detects_low_confidence"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_low_confidence",
+          "inconclusive_data_quality",
+          "answer_with_caveat"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "assay_confidence",
+      "chembl_metadata",
+      "epistemic_humility",
+      "tool_use"
+    ],
+    "ground_truth_failure_mode": "low_confidence_assay",
+    "requires_external_lookup": true,
+    "expected_tool_substrings": [
+      "ChEMBL",
+      "assay"
+    ],
+    "notes": "Assay ID pinned by generator to one with ChEMBL confidence_score <= 4."
+  }
+}

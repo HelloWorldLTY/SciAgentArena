@@ -1,0 +1,67 @@
+{
+  "id": "val_C1_04_invalid_geometry",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV containing local 3D molecular structure references with columns: ID and PDB_PATH.\n\nRead each PDB file and calculate the Radius of Gyration (RoG) for the heavy atoms to assess structural compactness.\n\nStore these task-specific variables:\n- `rog_results` (dict[str, float]): mapping from the exact ID to the computed RoG\n- `n_total_structures` (int): number of rows in the dataset\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt. If you detect physical impossibilities in the data that invalidate the task, halt calculations and report the underlying cause.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_C1_04_structures.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_total_structures",
+        "expected": 3,
+        "label": "loads_structure_manifest",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "invalid_3d_geometry",
+        "label": "correct_failure_mode",
+        "weight": 1.0,
+        "requires": "loads_structure_manifest"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "3d_geometry_validation",
+      "pdb_parsing",
+      "distance_checks",
+      "radius_of_gyration"
+    ],
+    "failure_mode": "At least one local structure record contains non-bonded heavy atoms at a physically impossible distance even after excluding directly bonded atom pairs.",
+    "ground_truth_failure_mode": "invalid_3d_geometry",
+    "source_task": "synthetic",
+    "source_asset": "manifest_alpha.csv + structure_001.pdb + structure_002.pdb + structure_003.pdb"
+  }
+}

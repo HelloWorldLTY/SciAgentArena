@@ -1,0 +1,38 @@
+{
+  "id": "ana_01_tsne",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV file of 200 drug-like molecules with SMILES and cluster labels. Compute Morgan fingerprints (radius=2, nBits=2048) for each molecule using RDKit, then run t-SNE (perplexity=30, random_state=42) to reduce the fingerprints to 2D. Store the resulting coordinates in a variable called `tsne_coords` (a numpy array of shape [200, 2]). Also create a scatter plot of the t-SNE embedding, colored by cluster label.\n\nThe input CSV is at the path given in _TASK_INPUT['file_path']. Columns: SMILES, Name, Cluster.",
+  "input": {
+    "file_path": "tasks_interactive/data/diverse_library.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "shape_equals",
+        "variable": "tsne_coords",
+        "expected_shape": [-1, 2],
+        "label": "tsne_shape_cols"
+      },
+      {
+        "assertion": "shape_first_dim",
+        "variable": "tsne_coords",
+        "expected_n": 200,
+        "label": "tsne_shape_rows"
+      },
+      {
+        "assertion": "plot_exists",
+        "label": "plot_exists"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": ["morgan_fingerprints", "tsne", "dimensionality_reduction", "scatter_plot"]
+  }
+}

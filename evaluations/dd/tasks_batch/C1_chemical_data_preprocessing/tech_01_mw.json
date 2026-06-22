@@ -1,0 +1,35 @@
+{
+  "id": "tech_01_mw",
+  "type": "chemical_data_preprocessing",
+  "prompt": "You are given a list of SMILES strings. For each molecule, calculate its exact molecular weight (using RDKit's Descriptors.ExactMolWt). Return the results as a JSON object printed to stdout, where keys are the original SMILES strings and values are the molecular weights rounded to 4 decimal places.",
+  "input": {
+    "smiles": [
+      "CCO",
+      "c1ccccc1",
+      "CC(=O)O",
+      "CC(=O)Oc1ccccc1C(=O)O",
+      "Cn1c(=O)c2c(ncn2C)n(C)c1=O"
+    ]
+  },
+  "constraints": {
+    "timeout_seconds": 30,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.molecular_weight_score",
+    "tolerance_da": 0.01
+  },
+  "ground_truth": {
+    "CCO": 46.0419,
+    "c1ccccc1": 78.0470,
+    "CC(=O)O": 60.0211,
+    "CC(=O)Oc1ccccc1C(=O)O": 180.0423,
+    "Cn1c(=O)c2c(ncn2C)n(C)c1=O": 194.0804
+  },
+  "metadata": {
+    "difficulty": "easy",
+    "concepts": ["molecular_weight", "smiles_parsing", "rdkit_basics"],
+    "notes": "Ground truth computed with RDKit 2023.09 Descriptors.ExactMolWt."
+  }
+}

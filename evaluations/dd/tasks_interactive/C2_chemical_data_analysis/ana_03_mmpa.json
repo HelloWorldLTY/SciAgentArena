@@ -1,0 +1,29 @@
+{
+  "id": "ana_03_mmpa",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of 500 molecules with SMILES, Name, and LogP values. Perform matched molecular pair analysis (MMPA): find all pairs where one molecule is identical to another except for a H→CH3 substitution. For each such pair, compute delta_LogP = LogP(CH3_variant) - LogP(H_variant). Report the average delta LogP across all matched pairs as a float variable called `avg_delta_logp`.\n\nHint: A simple approach is to compare canonical SMILES of each molecule against the SMILES obtained by replacing one H with CH3 (or vice versa). Alternatively, check if adding a methyl group to one molecule produces another molecule in the dataset.\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: SMILES, Name, LogP.",
+  "input": {
+    "file_path": "tasks_interactive/data/sar_500.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "avg_delta_logp",
+        "min": 0.15,
+        "max": 0.55,
+        "label": "avg_delta_logp_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": ["matched_molecular_pairs", "MMPA", "SAR_analysis", "LogP"]
+  }
+}

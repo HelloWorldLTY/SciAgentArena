@@ -1,0 +1,23 @@
+{
+  "id": "tech_03_hard_similarity",
+  "type": "chemical_data_preprocessing",
+  "prompt": "You are provided with a dataset file 'tasks_batch/data/Similarity_Search_hard_20.csv' containing a 'SMILES' column. The query molecule is L-DOPA: 'N[C@@H](Cc1ccc(O)c(O)c1)C(=O)O'.\n\nWrite a Python script to:\n1. Load the dataset.\n2. Compute Morgan fingerprints (radius=2, nBits=2048) for the query and all database molecules.\n3. Calculate the Tanimoto similarity between the query and each molecule.\n4. Rank the molecules in descending order of their similarity.\n5. Output the results as a JSON list of dictionaries to stdout. Each dictionary must have keys: 'SMILES' (the exact original raw string), 'Similarity' (the float value), and 'Rank' (integer starting from 1).",
+  "input": {
+    "file_path": "tasks_batch/data/Similarity_Search_hard_20.csv",
+    "query_smiles": "N[C@@H](Cc1ccc(O)c(O)c1)C(=O)O"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http"],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.score_ranking",
+    "ground_truth_file": "scorers/data/Similarity_Search_hard_ground_truth_20.csv",
+    "target_column": ["Similarity", "Rank"]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": ["rdkit", "similarity_ranking", "morgan_fingerprints"]
+  }
+}

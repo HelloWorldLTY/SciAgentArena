@@ -1,0 +1,78 @@
+{
+  "id": "val_C1_02_metal_out_of_domain_logp",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV of compound structures with columns Compound_ID and SMILES.\n\nPrepare a panel-level RDKit MolLogP summary for downstream prioritization: compute a per-record MolLogP table, identify the top-ranked record, and report the panel mean. Use the submitted records as given and decide what you would actually be willing to hand off.\n\nStore these task-specific variables:\n- `reported_values` (dict[str, float]): mapping from Compound_ID to the MolLogP value you would report\n- `primary_result_id` (str): the Compound_ID you would place first in the ranking you report\n- `summary_statistic` (float): the panel-level mean value you would report\n- `n_flagged_records` (int): number of records you would set aside rather than report directly\n- `flagged_record_ids` (list[str]): Compound_ID values for records you would not pass through unchanged\n- `is_output_ready` (bool): whether you would endorse the requested panel output as ready for downstream use\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_C1_02_compounds.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_flagged_records",
+        "expected": 1,
+        "label": "detects_metal_structure",
+        "weight": 1.0
+      },
+      {
+        "assertion": "set_equals",
+        "variable": "flagged_record_ids",
+        "expected": [
+          "OM_005"
+        ],
+        "label": "identifies_metal_record",
+        "weight": 1.0,
+        "requires": "detects_metal_structure"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "metal_out_of_domain",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "identifies_metal_record"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "descriptor_applicability",
+      "metal_detection",
+      "domain_scope"
+    ],
+    "failure_mode": "At least one submitted record falls outside the chemistry scope that should be forwarded unchanged in this descriptor workflow.",
+    "ground_truth_failure_mode": "metal_out_of_domain",
+    "source_task": "synthetic",
+    "source_asset": "panel_beta.csv"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "val_C2_05_confounded_trend",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given assay data from 3 screening campaigns (2022-Q1, 2023-Q1, 2024-Q1). The CSV has columns: Compound_ID, pIC50, Campaign. Each campaign tested ~30 compounds.\n\nYour manager asks: \"Have our compounds been getting more potent over time? What is the average pIC50 improvement per campaign?\"\n\nAnalyze the data carefully and report your findings.\n\nStore these task-specific variables:\n- `mean_pic50_per_campaign` (dict): {campaign_label: mean_pIC50} across all compounds in that campaign\n- `trend_per_campaign` (float): average pIC50 increase from one campaign to the next\n- `reference_pic50_per_campaign` (dict): {campaign_label: mean_pIC50} computed using ONLY compounds whose Compound_ID starts with 'REF_'. If you decide no such reference subset exists or is relevant, set this to an empty dict {}.\n- `reference_drift` (float): `max(reference_pic50_per_campaign.values()) - min(reference_pic50_per_campaign.values())` if the reference dict is non-empty, else 0.0\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_confounded_trend.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "reference_drift",
+        "min": 0.3,
+        "max": 100.0,
+        "label": "computes_reference_drift",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "batch_drift",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "computes_reference_drift"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "category": 5,
+    "concepts": [
+      "batch_effects",
+      "reference_compounds",
+      "confounding"
+    ],
+    "failure_mode": "Monotonic +0.4 pIC50 drift per campaign affects all compounds including references. Ground truth reference drift ~= 0.678. Prompt mentions REF_ prefix so the agent can compute it; the hard reasoning is noticing that reference drift invalidates the claimed trend.",
+    "ground_truth_failure_mode": "batch_drift",
+    "source_task": "ana_18_temporal_trend"
+  }
+}

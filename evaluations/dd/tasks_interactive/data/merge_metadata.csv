@@ -1,0 +1,39 @@
+Compound_ID,MW,LogP,Scaffold
+CPD_001,247.1,1.58,piperidine
+ CPD-002,339.5,2.92,pyridine
+cpd-003,313.3,3.01,indole
+CPD-004 ,368.2,1.44,piperidine
+CPD-005,229.4,3.24,benzene
+CPD-007,567.6,-0.77,pyridine
+CPD_008,269.4,3.18,indole
+ CPD-009,183.9,0.91,benzene
+cpd-010,392.3,1.2,benzene
+CPD-011 ,231.3,3.42,morpholine
+CPD-012,279.2,0.58,pyridine
+CPD-013,342.3,2.17,pyridine
+CPD-014,405.8,4.39,benzene
+CPD_015,419.2,1.12,indole
+ CPD-016,567.9,0.06,morpholine
+cpd-017,259.4,4.67,benzene
+CPD-018 ,277.6,4.44,pyridine
+CPD-019,213.5,-0.58,pyridine
+CPD-021,533.0,2.28,benzene
+CPD_022,279.6,-0.96,benzene
+ CPD-023,521.9,2.01,indole
+cpd-024,471.1,0.17,morpholine
+CPD-025 ,294.0,0.98,pyridine
+CPD-026,331.4,-0.48,morpholine
+CPD-027,176.0,0.64,morpholine
+CPD-028,441.3,-0.78,pyridine
+CPD_029,348.6,1.71,benzene
+ CPD-030,371.0,0.29,pyridine
+cpd-031,522.0,3.59,indole
+CPD-032 ,353.6,0.44,piperidine
+CPD-033,546.1,2.16,morpholine
+CPD-034,561.6,2.96,indole
+CPD-035,261.0,4.48,benzene
+CPD_036,166.3,2.86,morpholine
+ CPD-037,210.0,2.92,piperidine
+cpd-038,347.4,4.93,morpholine
+CPD-039 ,303.0,0.62,benzene
+CPD-040,529.2,-0.24,benzene

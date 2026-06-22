@@ -1,0 +1,44 @@
+{
+  "id": "ana_14_unit_inconsistency",
+  "type": "chemical_data_analysis",
+  "prompt": "You have an assay dataset with IC50 measurements. Compute summary statistics for compound potency and identify the most potent compound.\n\nColumns: Compound_ID, IC50_value, Unit, Target\n\nStore:\n- `median_ic50_nM` (float): median IC50 in nM across all compounds\n- `most_potent` (str): Compound_ID of the most potent compound\n- `n_converted` (int): number of rows whose IC50 was not originally reported in nM\n\nLoad data from _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/unit_inconsistency.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "median_ic50_nM",
+        "min": 4514.9098,
+        "max": 4614.9098,
+        "label": "median_ic50_nM_range"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "most_potent",
+        "expected": "CPD_044",
+        "label": "most_potent_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_converted",
+        "expected": 32,
+        "label": "n_converted_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "concepts": ["unit_conversion", "mixed_units", "data_cleaning", "aggregation"],
+    "trap": "A naive analysis ignoring the Unit column will compute summary statistics over raw values (mixing nM and uM), producing incorrect results",
+    "notes": "Tier 2 — unit inconsistency trap. Agents must read and apply the Unit column before computing any statistics."
+  }
+}

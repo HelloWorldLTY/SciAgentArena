@@ -1,0 +1,73 @@
+{
+  "id": "val_C2_03_alias_sar",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given three CSV files from different laboratory systems:\n1. Assay results: Compound_ID, pIC50, Replicate\n2. Compound metadata: Compound_ID, SMILES, MW, LogP (note: some IDs have formatting inconsistencies \u2014 strip whitespace and normalize case before joining)\n3. Scaffold annotations: Compound_ID, Scaffold_ID, R_group_1, R_group_2\n\nNormalize IDs, perform a 3-way inner join on Compound_ID, then validate the scaffold annotations by computing the Murcko scaffold of each compound from its SMILES (use `rdkit.Chem.Scaffolds.MurckoScaffold.MurckoScaffoldSmiles`).\n\nStore these task-specific variables:\n- `n_merged` (int): number of compounds after 3-way join\n- `n_unique_murcko` (int): number of distinct Murcko scaffold SMILES across the merged set\n- `n_unique_scaffold_labels` (int): number of distinct Scaffold_ID labels across the merged set\n- `n_murcko_with_multiple_scaffold_ids` (int): number of Murcko scaffolds that are assigned more than one Scaffold_ID label (i.e., the label is inconsistent with chemistry)\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nFile paths are in _TASK_INPUT['file_paths']:\n- _TASK_INPUT['file_paths']['assay']\n- _TASK_INPUT['file_paths']['compounds']\n- _TASK_INPUT['file_paths']['scaffolds']",
+  "input": {
+    "file_paths": {
+      "assay": "tasks_interactive/data/val_alias_assay.csv",
+      "compounds": "tasks_interactive/data/val_alias_compounds.csv",
+      "scaffolds": "tasks_interactive/data/val_alias_scaffolds.csv"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 180,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "n_murcko_with_multiple_scaffold_ids",
+        "min": 1,
+        "max": 100,
+        "label": "detects_scaffold_inconsistency",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "shuffled_annotation",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "detects_scaffold_inconsistency"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "join_validation",
+      "data_integrity",
+      "scaffold_annotation"
+    ],
+    "failure_mode": "Scaffold IDs shuffled: the benzamide Murcko scaffold (shared by 15 of 20 compounds) is labelled with 5 different Scaffold_IDs. n_murcko_with_multiple_scaffold_ids ground truth = 1.",
+    "ground_truth_failure_mode": "shuffled_annotation",
+    "source_task": "ana_16_multi_source_sar",
+    "source_asset": "multi_source_scaffolds.csv (shuffled)"
+  }
+}

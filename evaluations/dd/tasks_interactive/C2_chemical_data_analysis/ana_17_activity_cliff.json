@@ -1,0 +1,30 @@
+{
+  "id": "ana_17_activity_cliff",
+  "type": "chemical_data_analysis",
+  "prompt": "You have a compound library with structural and activity data. Identify activity cliffs in this dataset and characterise the compound most central to cliff relationships.\n\nColumns: Compound_ID, SMILES, pIC50, Series\n\nStore:\n- `cliff_hub` (str): Compound_ID of the compound involved in the most cliff pairs\n\nLoad data from _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/activity_cliffs.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "cliff_hub",
+        "expected": "CLIFF_176",
+        "label": "cliff_hub_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["activity_cliffs", "tanimoto_similarity", "morgan_fingerprints", "pairwise_comparison", "sar"],
+    "notes": "Tier 3 — requires pairwise Tanimoto computation over ~200 compounds; agents must correctly define and enumerate activity cliffs."
+  }
+}

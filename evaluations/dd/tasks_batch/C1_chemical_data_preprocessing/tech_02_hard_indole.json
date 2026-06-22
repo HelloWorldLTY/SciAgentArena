@@ -1,0 +1,32 @@
+{
+  "id": "tech_02_hard_indole",
+  "type": "chemical_data_preprocessing",
+  "prompt": "You are provided with a dataset file 'tasks_batch/data/Substructure_Filtering_hard_20.csv' containing a 'SMILES' column. These molecules come from realistic chemical data sources and may not all be immediately suitable for direct substructure matching. Write a Python script to:\n1. Load the dataset.\n2. Use RDKit to prepare each molecule in an appropriate form for reliable substructure analysis.\n3. Identify which molecules contain the Indole core. You must define the structural pattern needed for a strict substructure match yourself.\n4. Handle invalid SMILES gracefully.\n5. Output the result to stdout as a single JSON object in the exact following format: {\"matches\": [list_of_smiles_that_contain_indole]}.",
+  "input": {
+    "file_path": "tasks_batch/data/Substructure_Filtering_hard_20.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib"
+    ],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.score_classification",
+    "ground_truth_file": "scorers/data/Substructure_Filtering_hard_ground_truth_20.csv",
+    "target_column": "HAS_INDOLE"
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": [
+      "substructure_search",
+      "rdkit",
+      "indole",
+      "SMARTS_generation",
+      "decoys",
+      "data_cleaning"
+    ]
+  }
+}

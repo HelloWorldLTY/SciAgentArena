@@ -1,0 +1,28 @@
+{
+  "id": "ana_07_vis_outlier",
+  "type": "chemical_data_analysis",
+  "prompt": "Look at the scatter plot image provided. It shows Molecular Weight (x-axis) vs LogP (y-axis) for a set of labeled molecules. One molecule is clearly an outlier, isolated far from the main cluster. Identify this outlier molecule by its label and return your answer as JSON.\n\nReturn a JSON object with one key: 'outlier_id' (string).",
+  "input": {
+    "image_path": "tasks_interactive/data/vision/sar_outlier.png"
+  },
+  "constraints": {
+    "timeout_seconds": 30,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_vision_json",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "key": "outlier_id",
+        "expected": "MOL_88",
+        "label": "outlier_id"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "easy",
+    "concepts": ["visual_inspection", "outlier_detection", "scatter_plot"]
+  }
+}

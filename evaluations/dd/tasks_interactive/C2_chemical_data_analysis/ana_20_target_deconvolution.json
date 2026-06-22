@@ -1,0 +1,46 @@
+{
+  "id": "ana_20_target_deconvolution",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of 30 ChEMBL compound identifiers with measured pIC50 values. Columns: Compound_ChEMBL_ID, pIC50. The target annotation has been stripped.\n\nIdentify the single primary target that the majority of these compounds have been reported to bind, using the ChEMBL database. The SMILES are NOT provided — you must resolve compound-to-target via an authoritative lookup, not via structure-based inference.\n\nStore these variables:\n- `primary_target_chembl_id` (str): the ChEMBL target ID (e.g. 'CHEMBL203') shared by the plurality of compounds.\n- `n_compounds_sharing_target` (int): how many of the 30 have a reported activity against that target.\n- `fraction_shared` (float): `n_compounds_sharing_target / 30`.\n\nLoad the CSV from `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/target_deconvolution.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "primary_target_chembl_id",
+        "expected": "CHEMBL203",
+        "label": "primary_target_correct"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "n_compounds_sharing_target",
+        "min": 27,
+        "max": 30,
+        "label": "n_compounds_in_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "fraction_shared",
+        "min": 0.9,
+        "max": 1.0,
+        "label": "fraction_in_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["chembl_lookup", "target_deconvolution", "tool_use"],
+    "requires_external_lookup": true,
+    "expected_tool_substrings": ["ChEMBL", "target", "get_target"],
+    "notes": "SMILES withheld intentionally; agent must route via the ChEMBL database tool to resolve compound -> target. Bare-LLM agents lacking external lookup should fail this task."
+  }
+}

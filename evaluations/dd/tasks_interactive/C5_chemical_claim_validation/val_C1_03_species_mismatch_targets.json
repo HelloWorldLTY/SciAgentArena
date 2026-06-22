@@ -1,0 +1,95 @@
+{
+  "id": "val_C1_03_species_mismatch_targets",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given two local CSV files. The first file is a disease-target association table with columns: Disease, MONDO_ID, UniProt_Target_ID, and Association_Score. The second file is a supporting metadata lookup table with columns: UniProt_Target_ID, Reviewed, Protein_Name, Gene_Symbol, and Taxonomic_Lineage. Treat `Reviewed` as a boolean-like field: `true` means reviewed and `false` means not reviewed.\n\nFor the query \"Alzheimer disease\", prepare the UniProt target IDs with Association_Score >= 0.5 that you would hand off to a downstream translational docking workflow. Join the selected IDs to the supporting metadata and decide what you would actually be willing to forward.\n\nStore these task-specific variables:\n- `reported_ids` (list[str]): UniProt target IDs you would actually pass downstream\n- `matched_count` (int): number of rows matching the queried disease name\n- `linked_count` (int): number of selected target IDs with Association_Score >= 0.5 that were successfully linked to the supporting metadata table, regardless of whether they are ultimately forwarded downstream\n- `supporting_context` (dict[str, str]): mapping from each reported UniProt target ID to its supporting context string from the metadata table\n- `n_flagged_records` (int): number of selected rows you would flag for review before handoff\n- `is_output_ready` (bool): whether you would endorse the requested handoff as ready downstream\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nFile paths are in _TASK_INPUT['file_paths']:\n- _TASK_INPUT['file_paths']['associations']\n- _TASK_INPUT['file_paths']['supporting_table']",
+  "input": {
+    "file_paths": {
+      "associations": "tasks_interactive/data/val_C1_03_disease_targets.csv",
+      "supporting_table": "tasks_interactive/data/val_C1_03_uniprot_meta.csv"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "matched_count",
+        "expected": 5,
+        "label": "extracts_threshold_passing_targets",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "linked_count",
+        "expected": 5,
+        "label": "joins_selected_targets_to_metadata",
+        "weight": 1.0,
+        "requires": "extracts_threshold_passing_targets"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_flagged_records",
+        "expected": 5,
+        "label": "detects_nonhuman_uniprot_targets",
+        "weight": 1.0,
+        "requires": "joins_selected_targets_to_metadata"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "is_output_ready",
+        "expected": false,
+        "label": "flags_human_pipeline_incompatibility",
+        "weight": 1.0,
+        "requires": "detects_nonhuman_uniprot_targets"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "species_mismatch",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "flags_human_pipeline_incompatibility"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "species_filtering",
+      "metadata_join",
+      "pipeline_scope"
+    ],
+    "failure_mode": "The requested handoff includes records that are not appropriate for the stated downstream workflow once the supporting metadata is taken into account.",
+    "ground_truth_failure_mode": "species_mismatch",
+    "source_task": "synthetic",
+    "source_asset": "table_alpha.csv + table_beta.csv"
+  }
+}

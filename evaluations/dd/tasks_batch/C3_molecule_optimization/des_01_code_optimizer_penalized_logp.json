@@ -1,0 +1,49 @@
+{
+  "id": "des_01_code_optimizer_penalized_logp",
+  "type": "molecule_optimization",
+  "prompt": "Write a single self-contained Python script that implements an optimizer to design analog molecules improving penalized logP under a strict similarity constraint.\n\nTask\n- Your script will be executed ONCE PER LEAD against a benchmark of many lead molecules. It must be fully lead-agnostic: do NOT hardcode any specific SMILES.\n- At runtime the lead arrives via AGENT4S_INPUT_JSON['lead_smiles']. Read it and design analog molecules that (a) improve penalized_logP by at least `min_improvement_delta` over the lead and (b) stay structurally similar to that lead.\n\nExecution environment\n- Your script will be invoked as `python agent_solution.py` by a subprocess runner.\n- It must run CPU-only. Do NOT call .cuda(), .to('cuda'), or any torch.cuda API.\n- Wall-clock timeout: 1800 seconds / 30 minutes (see constraints.timeout_seconds).\n- You may import: rdkit, numpy, scipy, networkx, pandas, sklearn, stdlib.\n- You MAY NOT import: requests, urllib, http, socket, openai, anthropic, google.\n- Do NOT download files, load remote model weights, or open network sockets.\n\nInputs\n- Read task input from env var AGENT4S_INPUT_JSON (a JSON object). Fields:\n    lead_smiles            : str    - lead molecule SMILES\n    similarity_threshold   : float  - Tanimoto cutoff (typically 0.4)\n    fingerprint_radius     : int    - Morgan radius (2)\n    fingerprint_nbits      : int    - Morgan nBits (2048)\n    min_improvement_delta  : float  - minimum penalized_logP gain over the lead required for success (1.0; prevents trivial sub-noise \"improvements\")\n    oracle_budget          : int    - hard cap on oracle calls (100)\n\nOracle (your ONLY scoring tool)\n- Purpose. The oracle is your single, local scoring interface. It judges one candidate SMILES against the lead and reports whether that candidate satisfies the task (similar enough to the lead AND sufficiently improved in penalized_logP). Any SMILES you do NOT pass to oracle.score(...) is invisible to the harness; local RDKit scoring alone is not enough.\n- There is no other scoring function to call. Do NOT attempt to import or invoke any module under scorers/ other than the oracle below.\n\n- Construction (free; no budget cost):\n    from scorers.oracle_budget import BudgetedPenalizedLogPOracle, OracleBudgetExceededError\n    oracle = BudgetedPenalizedLogPOracle(lead_smiles, budget=oracle_budget,\n                                         min_improvement_delta=min_improvement_delta)\n    # similarity_threshold, fingerprint_radius, fingerprint_nbits default to the task's values (0.4 / 2 / 2048).\n  Precomputed reference attributes (free):\n    oracle.lead_canonical         : str    - canonical SMILES of the lead\n    oracle.lead_penalized_logp    : float  - penalized_logP of the lead\n    oracle.lead_fp                : ExplicitBitVect - Morgan fp of the lead\n  Free helpers (no budget cost):\n    oracle.fingerprint(smiles)    -> Morgan fp | None\n    oracle.tanimoto_to_lead(smi)  -> float | None\n    oracle.calls_remaining        -> int\n\n- Call:   result = oracle.score(candidate_smiles)\n\n- Input to score():\n    candidate_smiles : str - any SMILES string; invalid, duplicate, or empty\n                             inputs are handled gracefully (still cost 1 unit).\n\n- Output dict returned by score():\n    valid                 : bool       - RDKit could parse the canonicalized SMILES\n    canonical_smiles      : str|None   - canonical form of the input\n    duplicate             : bool       - same canonical as a previous score() call\n    equals_lead           : bool       - canonical == oracle.lead_canonical\n    tanimoto              : float|None - Morgan Tanimoto vs. the lead\n    similar_ok            : bool       - tanimoto >= similarity_threshold\n    penalized_logp        : float|None - penalized_logP of the candidate\n    penalized_logp_delta  : float|None - candidate - lead\n    improved_ok           : bool       - delta > min_improvement_delta\n    success               : bool       - similar_ok AND improved_ok AND NOT equals_lead\n    components            : dict|None  - {logp, sa_score, cycle_penalty, ...}\n    calls_used            : int        - budget units spent so far (incl. this call)\n    budget                : int        - total allowed (= oracle_budget)\n    error                 : str|None   - populated on invalid / failed input\n\n- Cost and determinism:\n    - Every score() call costs exactly 1 unit - including invalid, duplicate, and empty inputs.\n    - score() is deterministic: the same canonical SMILES returns the same result (but still costs 1 unit).\n    - When the budget is exhausted, further calls raise OracleBudgetExceededError. Check oracle.calls_remaining first, or wrap calls in try/except.\n\n- You may use RDKit directly for any local operation (parsing, substructure checks, fingerprints, similarity, fragment edits, descriptors). Only oracle.score(...) counts against the budget.\n\nAllowed optimizer families (pick one or combine)\n- Genetic algorithm over SMILES or molecular graphs (e.g. GraphGA-style crossover + mutation)\n- Matched molecular pairs / fragment replacement (RDKit BRICS, RECAP, or custom reaction SMARTS)\n- Beam search over local edit operations (atom/bond/ring edits)\n- Simulated annealing or hill-climbing on local edits\n- Bayesian optimization over a discrete edit space (e.g. GP on Morgan fingerprints with UCB / EI)\n- Scaffold-constrained fragment enumeration from BRICS decomposition of the lead\n\nDisallowed\n- Training a neural generator (VAE / RL / diffusion) inside the script\n- Loading pretrained neural-network weights from disk or the network\n- Exhaustive enumeration of all SMILES strings\n\nHow your submission is finalized (you do NOT need to print anything)\n- Every `oracle.score(...)` call is automatically appended as one JSON line to the harness's optimizer stream. You do not manage this file yourself.\n- After your script exits (or hits the timeout), the harness looks at every candidate you passed to `oracle.score(...)`, keeps the successes (valid SMILES AND Tanimoto(lead, candidate) >= similarity_threshold AND penalized_logp(candidate) > penalized_logp(lead) + min_improvement_delta, excluding the lead itself), sorts them by penalized_logp descending, and retains the top 10 as your final submission.\n- Duplicates and invalids still consume budget but are filtered out for free. You do NOT need to deduplicate, rank, or print a final list - just call `oracle.score(...)` on the candidates you want evaluated.\n- stdout is ignored. Use stderr for any debugging / logging.\n\nRequired docstring\n- The top of your file must be a one-paragraph docstring naming the algorithm you chose and the key hyperparameters (population size, mutation rate, beam width, etc.).",
+  "input": {
+    "lead_smiles": "CC(=O)Nc1ccc(S(=O)(=O)Nc2ccccc2)cc1",
+    "similarity_threshold": 0.4,
+    "fingerprint_radius": 2,
+    "fingerprint_nbits": 2048,
+    "min_improvement_delta": 1.0,
+    "oracle_budget": 100,
+    "leads_csv": "tasks_batch/data/des_penalized_logp_leads.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 1800,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "socket",
+      "openai",
+      "anthropic",
+      "google"
+    ],
+    "output_format": "oracle_stream"
+  },
+  "scoring_logic": {
+    "scorer": "penalized_logp_scorer.score_penalized_logp_optimization",
+    "k": 10,
+    "lead_smiles": "CC(=O)Nc1ccc(S(=O)(=O)Nc2ccccc2)cc1",
+    "similarity_threshold": 0.4,
+    "fingerprint_radius": 2,
+    "fingerprint_nbits": 2048,
+    "min_improvement_delta": 1.0
+  },
+  "metadata": {
+    "is_batch_template": true,
+    "template_note": "Single-lead code-optimizer template. For multi-lead sweeps, a driver should substitute input.lead_smiles and scoring_logic.lead_smiles with each row from input.leads_csv.",
+    "difficulty": "hard",
+    "concepts": [
+      "code_generation",
+      "optimizer_design",
+      "constrained_optimization",
+      "penalized_logp",
+      "budgeted_oracle"
+    ],
+    "notes": "LLM writes a Python optimizer script; batch_runner executes it with an oracle-budget wrapper and scores the final SMILES list using the existing des_01 scorer."
+  }
+}

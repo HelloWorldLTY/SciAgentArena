@@ -1,0 +1,79 @@
+{
+  "id": "val_C2_10_ontology_scope",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a 2-row CSV (columns: Compound_Name, Claim). Each row contains a compound name and a classification claim of the form 'is a kinase inhibitor'. Your task is to verify each claim against the ChEBI ontology \u2014 the authoritative arbiter for role/class annotations.\n\nFor each row: resolve the compound to a ChEBI ID via ChEBI search, then inspect the ChEBI role / parent class annotations to decide whether 'kinase inhibitor' (CHEBI:35222 or a descendant) applies. Do NOT rely on your own knowledge.\n\nStore:\n- `chebi_id` (str): ChEBI ID for the FIRST row (e.g. 'CHEBI:45783').\n- `is_kinase_inhibitor_per_chebi` (bool): True iff ChEBI annotates the FIRST compound with a kinase-inhibitor role or parent class.\n- `chebi_parent_classes` (list[str]): ChEBI parent class names for the first compound.\n\nAlso set the shared diagnostic variables. If the SECOND row's claim disagrees with ChEBI (a decoy), set `failure_mode='ontology_scope_mismatch'`.\n\nInput CSV at `_TASK_INPUT['file_path']`.\n\nShared diagnostic variables required for this Competency 5 suite:\n- `conclusion_status` (str): choose one value from `tasks_interactive/data/c5_allowed_values.json`.\n- `failure_mode` (str): choose one value from the shared failure-mode pool; use `none` only if the data are clean.\n- `recommended_action` (str): choose one value from the shared recommended-action pool.\n- `issue_detected` (str): concise evidence for the defect, or `none` if no issue is detected.\n",
+  "input": {
+    "file_path": "tasks_interactive/data/val_10_ontology.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "contains_any",
+        "variable": "chebi_id",
+        "keywords": [
+          "CHEBI:"
+        ],
+        "label": "computes_chebi_lookup",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "is_kinase_inhibitor_per_chebi",
+        "expected": true,
+        "label": "correct_positive_classification",
+        "weight": 2.0,
+        "requires": "computes_chebi_lookup"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "ontology_scope_mismatch",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "computes_chebi_lookup"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "answer_with_caveat",
+          "inconclusive_other",
+          "inconclusive_data_quality"
+        ],
+        "label": "correct_conclusion_status",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "category": 5,
+    "concepts": [
+      "chebi_ontology",
+      "role_annotation",
+      "tool_use"
+    ],
+    "ground_truth_failure_mode": "ontology_scope_mismatch",
+    "requires_external_lookup": true,
+    "expected_tool_substrings": [
+      "ChEBI"
+    ],
+    "notes": "Row 1: true kinase inhibitor (e.g., imatinib). Row 2: decoy that is NOT a kinase inhibitor per ChEBI (e.g., hydrochlorothiazide). Expected bool = True for row 1. failure_mode flags the decoy mismatch."
+  }
+}

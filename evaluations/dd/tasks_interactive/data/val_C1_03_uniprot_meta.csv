@@ -1,0 +1,9 @@
+UniProt_Target_ID,Reviewed,Protein_Name,Gene_Symbol,Taxonomic_Lineage
+P30561,true,Alpha-2A adrenergic receptor,Adra2a,Eukaryota; Metazoa; Chordata; Mammalia; Rodentia; Muridae; Mus musculus
+Q9Z0P7,true,Beta-secretase 1,Bace1,Eukaryota; Metazoa; Chordata; Mammalia; Rodentia; Muridae; Mus musculus
+P20760,true,Ig gamma-1 chain C region,Ighg1,Eukaryota; Metazoa; Chordata; Mammalia; Rodentia; Muridae; Mus musculus
+Q5XIE8,true,Amyloid beta A4 protein,App,Eukaryota; Metazoa; Chordata; Mammalia; Rodentia; Muridae; Mus musculus
+P10637,true,Microtubule-associated protein tau,Mapt,Eukaryota; Metazoa; Chordata; Mammalia; Rodentia; Muridae; Mus musculus
+P37840,true,Alpha-synuclein,SNCA,Eukaryota; Metazoa; Chordata; Mammalia; Primates; Hominidae; Homo sapiens
+P01308,true,Insulin,INS,Eukaryota; Metazoa; Chordata; Mammalia; Primates; Hominidae; Homo sapiens
+P04637,true,Cellular tumor antigen p53,TP53,Eukaryota; Metazoa; Chordata; Mammalia; Primates; Hominidae; Homo sapiens

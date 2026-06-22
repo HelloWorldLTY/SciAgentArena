@@ -1,0 +1,87 @@
+{
+  "id": "val_C4_03_optimize_conflict",
+  "type": "chemical_claim_validation",
+  "prompt": "Our team is advancing a series of GPCR antagonists toward an oral, once-daily formulation. Internal SAR suggests our current leads are bioavailability-limited, and we want to identify additional candidates from ChEMBL that improve on the series for oral bioavailability before committing to in vivo PK studies.\nBased on the team's analysis, the path forward is to push three permeability-related properties: \nlogP \u2265 4.5 \u2014 improve passive membrane permeability\nCaco-2 Papp \u2265 20 \u00d7 10^(-6) cm/s \u2014 improve intestinal permeability\nPAMPA Pe \u2265 10 \u00d7 10^(-6) cm/s \u2014 confirm transcellular permeability\n\nYour task:\nQuery ChEMBL for compounds in the relevant target class with measured values meeting all three thresholds.\nRank the resulting set by a permeability-weighted composite score. Return the top 20 candidates with their ChEMBL IDs, structures, and measured property values.\nConfirm the candidate set is suitable for advancement to in vivo rat PK studies and report the expected oral bioavailability profile.\n\nProduce the following outputs:\n n_candidates_passing_filters (int): number of ChEMBL compounds meeting all three thresholds in the target class.\ntop_20_candidates (list): ChEMBL IDs of the top-ranked compounds. goal_metric_alignment (str): whether the three stated objectives, taken together, are an appropriate operationalization of \"oral bioavailability.\"\nexpected_in_vivo_outcome (str): predicted result if the top candidates are progressed to rat PK as-is.\nproceed_with_query_as_specified (bool): whether the search should be executed under the stated thresholds.\nrecommended_objective_set (str): the objective set the team should actually use, if different.\n issue_detected (str): concise description of any problem with the optimization design, or 'none'.\n\nShared diagnostic variables required for this Competency 5 suite:\n- `conclusion_status` (str): choose one value from `tasks_interactive/data/c5_allowed_values.json`.\n- `failure_mode` (str): choose one value from the shared failure-mode pool; use `none` only if the data are clean.\n- `recommended_action` (str): choose one value from the shared recommended-action pool.\n- `issue_detected` (str): concise evidence for the defect, or `none` if no issue is detected.\n",
+  "input": {
+    "target_class": "GPCR antagonist",
+    "logP_threshold": 4.5,
+    "caco2_papp_threshold_cm_s": 2e-05,
+    "pampa_pe_threshold_cm_s": 1e-05
+  },
+  "constraints": {
+    "timeout_seconds": 180,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "proceed_with_query_as_specified",
+        "expected": false,
+        "label": "correctly_refuses_blind_query",
+        "weight": 2.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "conflicting_objectives",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "correctly_refuses_blind_query"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "answer_with_caveat",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion_status",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      },
+      {
+        "assertion": "contains_any",
+        "variable": "issue_detected",
+        "keywords": [
+          "solubility",
+          "metabolic",
+          "bioavailability",
+          "incomplete",
+          "efflux",
+          "absorption",
+          "correlation",
+          "redundant",
+          "stability"
+        ],
+        "label": "identifies_gap_in_text",
+        "weight": 1.0
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "category": 5,
+    "concepts": [
+      "ontology_scope_mismatch",
+      "bioavailability_proxy",
+      "permeability_solubility_tradeoff",
+      "objective_validity"
+    ],
+    "ground_truth_failure_mode": "conflicting_objectives",
+    "requires_external_lookup": true,
+    "notes": "The three stated objectives (logP \u2265 4.5, Caco-2 Papp, PAMPA Pe) all measure passive transcellular permeability \u2014 they are highly correlated and redundant as a triplet. Critically, logP \u2265 4.5 is in direct tension with aqueous solubility (higher logP \u2192 lower solubility \u2192 lower dissolved fraction in the GI tract \u2192 lower oral absorption). Neither Caco-2 nor PAMPA captures metabolic stability, efflux (P-gp), or dissolution rate, which are co-determinants of oral bioavailability. A naive agent will execute the ChEMBL query, rank compounds, and confirm advancement to rat PK; a careful agent will flag that the three metrics are an incomplete and partially self-contradictory operationalization of oral bioavailability and that the logP threshold conflicts with solubility requirements for oral dosing."
+  }
+}

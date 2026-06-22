@@ -1,0 +1,46 @@
+{
+  "id": "ana_21_assay_harmonization",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given two activity tables for the same target, from two different ChEMBL assays. Table A: columns Compound_ChEMBL_ID, IC50_nM, Assay_ChEMBL_ID. Table B: same schema but a different Assay_ChEMBL_ID. The two assays use different readout conditions (e.g. cell-based vs biochemical) and are NOT directly comparable as reported.\n\nUse the ChEMBL assay metadata (confidence score, assay type, target, reported units) to decide how to harmonize the two tables to a single comparable pIC50 scale. Then report:\n\n- `n_assays_distinct` (int): number of distinct Assay_ChEMBL_IDs across the two tables (should be 2).\n- `harmonized_table_shape` (tuple): shape of the merged harmonized table (rows, cols).\n- `mean_pic50_after_harmonization` (float): mean pIC50 across the harmonized set.\n\nInputs: Table A at `_TASK_INPUT['file_a']`, Table B at `_TASK_INPUT['file_b']`.",
+  "input": {
+    "file_a": "tasks_interactive/data/assay_harmonization_a.csv",
+    "file_b": "tasks_interactive/data/assay_harmonization_b.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_assays_distinct",
+        "expected": 2,
+        "label": "n_assays_distinct"
+      },
+      {
+        "assertion": "shape_first_dim",
+        "variable": "harmonized_table_shape",
+        "expected_n": 40,
+        "label": "harmonized_row_count"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "mean_pic50_after_harmonization",
+        "min": 6.0,
+        "max": 7.5,
+        "label": "mean_pic50_in_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["chembl_assay_metadata", "harmonization", "tool_use"],
+    "requires_external_lookup": true,
+    "expected_tool_substrings": ["ChEMBL", "assay"],
+    "notes": "Mean pIC50 range is intentionally wide; tighten after generator runs. Harmonization requires reading assay type/units from ChEMBL."
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "des_09_code_optimizer_isomers_c11h24",
+  "type": "molecule_optimization",
+  "prompt": "Write a single self-contained Python script that implements an optimizer for the GuacaMol Isomers C11H24 benchmark.\n\nTask\n- Your script will be executed once. There is NO reference SMILES for this task; the goal is to generate molecules whose molecular formula matches C11H24 (11 carbons, 24 hydrogens). Constitutional alkane isomers are the natural answer space.\n- Read AGENT4S_INPUT_JSON for the task parameters; do NOT rely on hidden state.\n\nBackground\n- The TDC oracle is Oracle(\"isomers_c11h24\"), a [0, 1] score that rewards molecules whose formula is close to C11H24. It combines per-feature desirability windows over (carbons, hydrogens, total atoms) non-additively; the exact bandwidths are NOT disclosed. A perfect C11H24 alkane scores ~1.0; off-formula molecules drop quickly.\n- Success criterion: oracle_score >= target_score_min (0.95).\n\nExecution environment\n- Your script will be invoked as `python agent_solution.py` by a subprocess runner.\n- It must run CPU-only. Do NOT call .cuda(), .to('cuda'), or any torch.cuda API.\n- Wall-clock timeout: 1800 seconds / 30 minutes (see constraints.timeout_seconds).\n- You may import: rdkit, numpy, scipy, networkx, pandas, sklearn, stdlib.\n- You MAY NOT import: requests, urllib, http, socket, openai, anthropic, google.\n- Do NOT download files, load remote model weights, or open network sockets.\n- Do NOT hardcode large literal SMILES libraries (e.g. exhaustive lists of every undecane isomer); generate candidates programmatically.\n\nInputs\n- Read task input from env var AGENT4S_INPUT_JSON (a JSON object). Fields:\n    tdc_oracle_name        : str   - 'isomers_c11h24'\n    target_formula         : str   - 'C11H24' (informational)\n    target_score_min       : float - success threshold (0.95)\n    exclude_exact_target   : bool  - false (no target to exclude)\n    oracle_budget          : int   - hard cap on oracle calls (100)\n  This task does NOT have target_smiles_a / target_smiles_b.\n\nOracle (your ONLY scoring tool)\n- Purpose. The oracle is your single, local scoring interface. It judges one candidate SMILES by how closely its formula matches C11H24 and reports whether that candidate satisfies the task (oracle_score >= target_score_min). Any SMILES you do NOT pass to oracle.score(...) is invisible to the harness; local RDKit scoring alone is not enough.\n- There is no other scoring function to call. Do NOT attempt to import or invoke any module under scorers/ other than the oracle below.\n\n- Construction (free; no budget cost). Note: this oracle has no real reference molecule, so do not pass `target_smiles_a`. The wrapper uses an internal placeholder anchor; you do not need to know or set it.\n    from scorers.oracle_budget_guacamol import BudgetedGuacamolOracle, OracleBudgetExceededError\n    oracle = BudgetedGuacamolOracle(\n        tdc_oracle_name='isomers_c11h24',\n        budget=oracle_budget,\n        target_score_min=target_score_min,\n        exclude_exact_target=False,\n    )\n  Precomputed reference attributes (free):\n    oracle.calls_remaining   -> int\n\n- Call:   result = oracle.score(candidate_smiles)\n\n- Input to score():\n    candidate_smiles : str - any SMILES string; invalid, duplicate, or empty\n                             inputs are handled gracefully (still cost 1 unit).\n\n- Output dict returned by score():\n    valid              : bool       - RDKit could parse the canonicalized SMILES\n    canonical_smiles   : str|None\n    duplicate          : bool       - same canonical as a previous score() call\n    equals_target_a    : bool       - always False for this task\n    equals_target_b    : bool       - always False for this task\n    oracle_score       : float|None - oracle [0, 1] score; closer to 1 = closer to C11H24\n    improved_ok        : bool       - oracle_score >= target_score_min\n    debug_tanimoto_primary   : null       - unused (no target for this task)\n    debug_tanimoto_secondary : null       - unused\n    success            : bool       - improved_ok\n    calls_used         : int\n    budget             : int\n    error              : str|None\n\n- Cost and determinism:\n    - Every score() call costs exactly 1 unit (including invalid / duplicate / empty).\n    - score() is deterministic per canonical SMILES.\n    - When the budget is exhausted, further calls raise OracleBudgetExceededError.\n\n- You may use RDKit directly for any local operation, including formula-based pre-filtering before spending oracle budget (e.g. via `rdMolDescriptors.CalcMolFormula`). Local pre-screening is FREE and recommended.\n\nAllowed optimizer families (pick one or combine)\n- Bounded enumeration over alkane carbon-skeleton graphs (e.g. enumerate non-isomorphic alkane trees of 11 carbons; saturated tree implies C11H24)\n- Constructive enumeration / random sampling of branched alkanes with formula filter\n- Local edit search (atom swap / branch reattachment) starting from simple alkanes\n- Genetic algorithm over alkane skeletons with mutation (move methyl branch, swap chain length) and free formula-based filtering before each oracle call\n- Beam search guided by free formula matches\n\nDisallowed\n- Training a neural generator (VAE / RL / diffusion) inside the script\n- Loading pretrained neural-network weights from disk or the network\n- Exhaustive enumeration of all SMILES strings\n- Hardcoding large literal SMILES libraries (e.g. listing all 159 undecane isomers)\n\nHow your submission is finalized (you do NOT need to print anything)\n- Every `oracle.score(...)` call is automatically appended as one JSON line to the harness's optimizer stream. You do not manage this file yourself.\n- After your script exits (or hits the timeout), the harness looks at every candidate you passed to `oracle.score(...)`, keeps the successes (oracle_score >= target_score_min), sorts them by oracle_score descending, and retains the top 10 as your final submission.\n- Duplicates and invalids still consume budget but are filtered out for free. You do NOT need to deduplicate, rank, or print a final list - just call `oracle.score(...)` on the candidates you want evaluated.\n- stdout is ignored. Use stderr for any debugging / logging.\n\nRequired docstring\n- The top of your file must be a one-paragraph docstring naming the algorithm you chose and the key hyperparameters.",
+  "input": {
+    "tdc_oracle_name": "isomers_c11h24",
+    "target_formula": "C11H24",
+    "target_score_min": 0.95,
+    "exclude_exact_target": false,
+    "oracle_budget": 100
+  },
+  "constraints": {
+    "timeout_seconds": 1800,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "socket",
+      "openai",
+      "anthropic",
+      "google"
+    ],
+    "output_format": "oracle_stream"
+  },
+  "scoring_logic": {
+    "scorer": "guacamol_goal_scorer.score_guacamol_goal",
+    "k": 10,
+    "tdc_oracle_name": "isomers_c11h24",
+    "target_score_min": 0.95,
+    "exclude_exact_target": false,
+    "basic_score_mode": "strict"
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": [
+      "code_generation",
+      "optimizer_design",
+      "isomers",
+      "molecular_formula",
+      "guacamol",
+      "budgeted_oracle"
+    ],
+    "notes": "GuacaMol Isomers C11H24 as a code-optimizer task. No reference SMILES; the oracle scores molecules by how close their (nC, nH, nAtoms) tuple is to C11H24. Wrapper uses an internal placeholder anchor so the prompt does not have to leak any legal answer. basic_score_mode='strict' is fine here because there is no single 'target' to allow."
+  }
+}

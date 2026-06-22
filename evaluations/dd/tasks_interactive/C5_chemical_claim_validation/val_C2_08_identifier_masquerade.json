@@ -1,0 +1,70 @@
+{
+  "id": "val_C2_08_identifier_masquerade",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a 30-row CSV of apparently distinct compounds (columns: Row_ID, Display_Name, SMILES). Some rows refer to the same underlying molecular entity (same InChIKey after canonicalization) but present different SMILES (tautomers, salt forms, or alternative drawings) and different Display_Name values.\n\nCanonicalize every row to an InChIKey (local RDKit is fine) AND cross-check via PubChem CID lookup to rule out that matching InChIKeys actually refer to different entities (e.g., different salt forms PubChem treats as distinct). Then report aliasing pairs.\n\nStore:\n- `n_distinct_compounds_by_inchikey` (int)\n- `aliasing_pairs` (list[list[str]]): each inner list is a group of Row_IDs sharing an InChIKey (groups of >=2 only).\n- `n_rows_collapsed` (int): total rows minus `n_distinct_compounds_by_inchikey`.\n\nAlso set the shared diagnostic variables.\n\nInput CSV at `_TASK_INPUT['file_path']`.\n\nShared diagnostic variables required for this Competency 5 suite:\n- `conclusion_status` (str): choose one value from `tasks_interactive/data/c5_allowed_values.json`.\n- `failure_mode` (str): choose one value from the shared failure-mode pool; use `none` only if the data are clean.\n- `recommended_action` (str): choose one value from the shared recommended-action pool.\n- `issue_detected` (str): concise evidence for the defect, or `none` if no issue is detected.\n",
+  "input": {
+    "file_path": "tasks_interactive/data/val_08_aliases.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "n_rows_collapsed",
+        "min": 3,
+        "max": 20,
+        "label": "computes_inchikey_dedupe",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "identity_duplicates",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "computes_inchikey_dedupe"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "answer_with_caveat"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "identity_duplicates",
+      "inchikey",
+      "pubchem_verification",
+      "tool_use"
+    ],
+    "ground_truth_failure_mode": "identity_duplicates",
+    "requires_external_lookup": true,
+    "expected_tool_substrings": [
+      "PubChem"
+    ],
+    "notes": "InChIKey is locally computable; the tool-use requirement is the PubChem cross-check to distinguish tautomers from genuinely distinct salt forms."
+  }
+}

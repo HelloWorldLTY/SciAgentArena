@@ -1,0 +1,48 @@
+{
+  "id": "des_10_code_optimizer_median_1",
+  "type": "molecule_optimization",
+  "prompt": "Write a single self-contained Python script that implements an optimizer for the GuacaMol Median Molecules 1 benchmark.\n\nTask\n- Your script will be executed once against TWO fixed reference molecules (Camphor and Menthol). Do NOT rely on hidden state outside the runtime JSON payload.\n- At runtime the references arrive via AGENT4S_INPUT_JSON['target_smiles_a'] (Camphor) and AGENT4S_INPUT_JSON['target_smiles_b'] (Menthol). Read both and design molecules that are simultaneously similar to BOTH references.\n\nBackground\n- The TDC oracle is Oracle(\"median1\"), a [0, 1] score that combines structural similarity to BOTH references non-additively. The exact aggregation formula and fingerprint type are NOT disclosed; probe via oracle calls.\n- Camphor and menthol are not very similar to each other, so the maximum achievable score is well below 1.0. The GuacaMol paper reports baselines around 0.295 and modern best-known around 0.38; treat 0.30 as a 'solved' threshold.\n- Reference molecules:\n    Camphor: CC1(C)C2CCC1(C)C(=O)C2\n    Menthol: CC(C)C1CCC(C)CC1O\n- Success criterion: oracle_score >= target_score_min (0.30).\n\nExecution environment\n- Your script will be invoked as `python agent_solution.py` by a subprocess runner.\n- It must run CPU-only. Do NOT call .cuda(), .to('cuda'), or any torch.cuda API.\n- Wall-clock timeout: 1800 seconds / 30 minutes (see constraints.timeout_seconds).\n- You may import: rdkit, numpy, scipy, networkx, pandas, sklearn, stdlib.\n- You MAY NOT import: requests, urllib, http, socket, openai, anthropic, google.\n- Do NOT download files, load remote model weights, or open network sockets.\n- Do NOT hardcode large literal SMILES libraries or known benchmark answer lists.\n\nInputs\n- Read task input from env var AGENT4S_INPUT_JSON (a JSON object). Fields:\n    tdc_oracle_name        : str   - 'median1'\n    target_smiles_a        : str   - Camphor reference\n    target_smiles_b        : str   - Menthol reference\n    target_score_min       : float - success threshold (0.30)\n    exclude_exact_target   : bool  - true (Camphor and Menthol themselves are NOT counted as success — your candidates must differ from both references)\n    oracle_budget          : int   - hard cap on oracle calls (100)\n\nOracle (your ONLY scoring tool)\n- Purpose. The oracle is your single, local scoring interface. It judges one candidate SMILES against BOTH fixed references (Camphor and Menthol) and reports whether that candidate satisfies the task (oracle_score >= target_score_min and not equal to either reference). Any SMILES you do NOT pass to oracle.score(...) is invisible to the harness; local RDKit scoring alone is not enough.\n- There is no other scoring function to call. Do NOT attempt to import or invoke any module under scorers/ other than the oracle below.\n\n- Construction (free; no budget cost):\n    from scorers.oracle_budget_guacamol import BudgetedGuacamolOracle, OracleBudgetExceededError\n    oracle = BudgetedGuacamolOracle(\n        tdc_oracle_name='median1',\n        budget=oracle_budget,\n        target_score_min=target_score_min,\n        target_smiles_a=target_smiles_a,\n        target_smiles_b=target_smiles_b,\n        exclude_exact_target=True,\n    )\n  Precomputed reference attributes (free):\n    oracle.target_canonical_a   : str - canonical SMILES of Camphor\n    oracle.target_fp_a                  - precomputed reference fingerprint of Camphor (same fingerprint family the TDC median1 oracle uses internally)\n    oracle.target_canonical_b   : str - canonical SMILES of Menthol\n    oracle.target_fp_b                  - precomputed reference fingerprint of Menthol (same fingerprint family as oracle.target_fp_a)\n    oracle.calls_remaining      -> int\n\n- Call:   result = oracle.score(candidate_smiles)\n\n- Input to score():\n    candidate_smiles : str - any SMILES string; invalid, duplicate, or empty\n                             inputs are handled gracefully (still cost 1 unit).\n\n- Output dict returned by score():\n    valid              : bool       - RDKit could parse the canonicalized SMILES\n    canonical_smiles   : str|None\n    duplicate          : bool       - same canonical as a previous score() call\n    equals_target_a    : bool       - canonical == Camphor canonical\n    equals_target_b    : bool       - canonical == Menthol canonical\n    oracle_score       : float|None - oracle [0, 1] score combining similarity to both references\n    improved_ok        : bool       - oracle_score >= target_score_min\n    debug_tanimoto_primary   : float|None - free Tanimoto vs Camphor using the oracle's fingerprint family (debug pre-screen signal)\n    debug_tanimoto_secondary : float|None - free Tanimoto vs Menthol using the oracle's fingerprint family (debug pre-screen signal)\n    success            : bool       - improved_ok AND NOT equals_target_a AND NOT equals_target_b\n    calls_used         : int\n    budget             : int\n    error              : str|None\n\n- Cost and determinism:\n    - Every score() call costs exactly 1 unit (including invalid / duplicate / empty).\n    - score() is deterministic per canonical SMILES.\n    - When the budget is exhausted, further calls raise OracleBudgetExceededError.\n\n- You may use RDKit directly to compute Tanimoto similarities to either reference for free. The `oracle.debug_tanimoto_primary` / `_secondary` fields, returned with each `score()` call, give you the oracle-aligned per-reference Tanimoto signal — useful for tuning a local pre-rank rule before committing more budget.\n\nAllowed optimizer families (pick one or combine)\n- Multi-target similarity search (pre-rank candidates by their joint similarity to BOTH references using free Tanimoto, then submit the top candidates to the oracle)\n- Fragment recombination drawing rings / functional groups from BRICS / RECAP decompositions of BOTH references\n- Genetic algorithm over molecular graphs with weighted multi-target fitness over the two reference similarities\n- Beam search over local edits guided by the free Tanimoto signals\n- Bayesian optimization over a discrete edit space with a multi-target acquisition function\n\nDisallowed\n- Training a neural generator (VAE / RL / diffusion) inside the script\n- Loading pretrained neural-network weights from disk or the network\n- Exhaustive enumeration of all SMILES strings\n- Hardcoding large literal SMILES answer lists\n\nHow your submission is finalized (you do NOT need to print anything)\n- Every `oracle.score(...)` call is automatically appended as one JSON line to the harness's optimizer stream. You do not manage this file yourself.\n- After your script exits (or hits the timeout), the harness looks at every candidate you passed to `oracle.score(...)`, keeps the successes (oracle_score >= target_score_min, excluding the exact references), sorts them by oracle_score descending, and retains the top 10 as your final submission.\n- Duplicates and invalids still consume budget but are filtered out for free. You do NOT need to deduplicate, rank, or print a final list - just call `oracle.score(...)` on the candidates you want evaluated.\n- stdout is ignored. Use stderr for any debugging / logging.\n\nRequired docstring\n- The top of your file must be a one-paragraph docstring naming the algorithm you chose and the key hyperparameters.",
+  "input": {
+    "tdc_oracle_name": "median1",
+    "target_smiles_a": "CC1(C)C2CCC1(C)C(=O)C2",
+    "target_smiles_b": "CC(C)C1CCC(C)CC1O",
+    "target_score_min": 0.30,
+    "exclude_exact_target": true,
+    "oracle_budget": 100
+  },
+  "constraints": {
+    "timeout_seconds": 1800,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "socket",
+      "openai",
+      "anthropic",
+      "google"
+    ],
+    "output_format": "oracle_stream"
+  },
+  "scoring_logic": {
+    "scorer": "guacamol_goal_scorer.score_guacamol_goal",
+    "k": 10,
+    "tdc_oracle_name": "median1",
+    "target_smiles_a": "CC1(C)C2CCC1(C)C(=O)C2",
+    "target_smiles_b": "CC(C)C1CCC(C)CC1O",
+    "target_score_min": 0.30,
+    "exclude_exact_target": true,
+    "basic_score_mode": "strict"
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": [
+      "code_generation",
+      "optimizer_design",
+      "median_molecule",
+      "multi_target_similarity",
+      "guacamol",
+      "budgeted_oracle"
+    ],
+    "notes": "GuacaMol Median Molecules 1 (Camphor + Menthol) as a code-optimizer task. The TDC oracle is the geometric mean of two ECFP4 Tanimoto similarities. Maximum achievable score is far below 1.0; 0.30 is a 'solved' threshold. basic_score_mode='strict' because no single 'target' to allow (two distinct anchors)."
+  }
+}

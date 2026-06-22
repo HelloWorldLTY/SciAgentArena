@@ -1,0 +1,53 @@
+{
+  "id": "ana_16_multi_source_sar",
+  "type": "chemical_data_analysis",
+  "prompt": "You have three data files from different experimental systems. Integrate the data and identify which scaffold series and substituent pattern drives the highest potency.\n\nFile columns — assay: Compound_ID, pIC50, Replicate; compounds: Compound_ID, SMILES, MW, LogP; scaffolds: Compound_ID, Scaffold_ID, R_group_1, R_group_2\n\nStore:\n- `n_merged` (int): number of unique compounds successfully integrated across all three files\n- `best_scaffold` (str): Scaffold_ID with the highest mean pIC50\n- `best_r1_in_scaffold` (str): R_group_1 substituent with the highest mean pIC50 within the best scaffold\n- `n_scaffolds` (int): number of distinct scaffolds in the integrated data\n\nLoad data from _TASK_INPUT['file_paths'].",
+  "input": {
+    "file_paths": {
+      "assay": "tasks_interactive/data/multi_source_assay.csv",
+      "compounds": "tasks_interactive/data/multi_source_compounds.csv",
+      "scaffolds": "tasks_interactive/data/multi_source_scaffolds.csv"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_merged",
+        "expected": 20,
+        "label": "n_merged_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "best_scaffold",
+        "expected": "SCAFFOLD_A",
+        "label": "best_scaffold_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "best_r1_in_scaffold",
+        "expected": "R1_CF3",
+        "label": "best_r1_in_scaffold_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_scaffolds",
+        "expected": 5,
+        "label": "n_scaffolds_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["multi_file_merge", "id_normalization", "sar_analysis", "scaffold_analysis", "data_integration"],
+    "trap": "Compound IDs in the compound metadata file have inconsistent formatting (lowercase, leading spaces) that must be normalized before merging",
+    "notes": "Tier 3 — agents must normalize IDs across 3 files and perform multi-way join before SAR analysis."
+  }
+}

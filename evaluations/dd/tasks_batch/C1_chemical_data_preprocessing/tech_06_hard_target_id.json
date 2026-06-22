@@ -1,0 +1,13 @@
+{
+  "id": "tech_06_hard_target_id",
+  "type": "chemical_data_preprocessing",
+  "prompt": "You are provided with 'tasks_batch/data/Target_ID_hard_tasks.csv' and 'tasks_batch/data/Target_ID_hard_database.csv'.\n\nThe task file contains disease names. The database contains ontology-linked disease-target associations and supporting metadata. Write a Python script to:\n1. Load both files.\n2. For each disease in the task file, identify the correct database records corresponding to that disease.\n3. From those records, determine the most appropriate target or targets to return for each disease based on the database evidence.\n4. Output a JSON list in the format: [{\"ID\": original_name, \"TARGETS\": comma_separated_targets}].",
+  "input": {
+    "file_path": "tasks_batch/data/Target_ID_hard_tasks.csv"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.score_string_property",
+    "ground_truth_file": "scorers/data/Target_ID_hard_ground_truth.csv",
+    "target_column": "TARGETS"
+  }
+}

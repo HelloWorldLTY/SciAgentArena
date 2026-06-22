@@ -1,0 +1,38 @@
+{
+  "id": "ana_10_dtype_trap",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of HTS assay results with columns: Plate_ID, Well, Compound_ID, pIC50. The Plate_ID column contains zero-padded string identifiers like '001', '002', ..., '012', plus a bare '8' (no leading zeros). There are 13 distinct plates when treated as strings.\n\nCompute the number of distinct plates and the mean pIC50 for plate '008' specifically.\n\nIMPORTANT: Plate_ID must be treated as a string (categorical) column, not converted to integer. Plate '008' and plate '8' are different plates.\n\nStore these variables:\n- `n_plates` (int): number of distinct Plate_ID values\n- `mean_activity_plate_008` (float): mean pIC50 for plate '008' only\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: Plate_ID, Well, Compound_ID, pIC50.",
+  "input": {
+    "file_path": "tasks_interactive/data/dtype_trap.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_plates",
+        "expected": 13,
+        "label": "n_plates_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "mean_activity_plate_008",
+        "expected": 6.867,
+        "tolerance": 0.01,
+        "label": "mean_activity_plate_008_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "concepts": ["dtype_handling", "categorical_vs_numeric", "groupby", "string_preservation"],
+    "trap": "Plate_ID looks numeric but contains leading zeros; naive int conversion merges '008' with '8'",
+    "notes": "Tier 2 — hidden dtype trap. If the agent reads Plate_ID as integer, plates '008' and '8' silently merge, producing 12 plates instead of 13 and a wrong mean for '008'."
+  }
+}

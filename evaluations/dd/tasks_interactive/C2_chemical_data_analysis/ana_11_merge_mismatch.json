@@ -1,0 +1,38 @@
+{
+  "id": "ana_11_merge_mismatch",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given two CSVs:\n1. Assay data at _TASK_INPUT['assay_path'] with columns: Compound_ID, pIC50, Replicate\n2. Compound metadata at _TASK_INPUT['metadata_path'] with columns: Compound_ID, MW, LogP, Scaffold\n\nThe Compound_ID keys are inconsistent between the two files: the assay file uses 'CPD-001' format (uppercase, dash separator), but the metadata file has formatting inconsistencies — some entries use underscores ('CPD_001'), some have leading/trailing whitespace (' CPD-001'), and some are lowercase ('cpd-001').\n\nNormalize the Compound_ID keys (strip whitespace, uppercase, standardize separator to dash) and perform an inner join. Then find the compound with the highest mean pIC50 (averaged across replicates) among the successfully merged compounds.\n\nStore these variables:\n- `n_merged` (int): number of rows in the merged table (inner join on normalized key)\n- `top_compound` (str): the normalized Compound_ID with the highest mean pIC50\n\nAssay CSV: _TASK_INPUT['assay_path']. Metadata CSV: _TASK_INPUT['metadata_path'].",
+  "input": {
+    "assay_path": "tasks_interactive/data/merge_assay.csv",
+    "metadata_path": "tasks_interactive/data/merge_metadata.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_merged",
+        "expected": 96,
+        "label": "n_merged_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "top_compound",
+        "expected": "CPD-014",
+        "label": "top_compound_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "concepts": ["merge_join", "key_normalization", "string_cleaning", "aggregation"],
+    "trap": "Merge keys have inconsistent formatting (whitespace, case, separator) across the two files; naive join produces empty or partial results",
+    "notes": "Tier 2 — merge key mismatch trap. 2 compounds are missing from metadata (inner join drops them). Without key normalization, the merge silently drops most rows."
+  }
+}

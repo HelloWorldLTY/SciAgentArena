@@ -1,0 +1,11 @@
+Compound_ID,SMILES,measured_logp
+CMP_001,CC1=C(C=C(C=C1)NC(=O)C2=CC=C(C=C2)CN3CCN(CC3)C)NC4=NC=CC(=N4)C5=CN=CC=C5,2.0
+CMP_002,CC(=O)OC1=CC=CC=C1C(=O)O,2.0
+CMP_003,CN1C=NC2=C1C(=O)N(C(=O)N2C)C,2.0
+CMP_004,CC(C)Cc1ccc(C(C)C(=O)O)cc1,2.0
+CMP_005,CC(=O)Nc1ccc(O)cc1,10.0
+CMP_006,CC(C)c1c(C(=O)Nc2ccccc2)c(-c2ccccc2)c(-c2ccc(F)cc2)n1CCC(O)CC(O)CC(=O)O,2.0
+CMP_007,CN(C)C(=N)NC(=N)N,2.0
+CMP_008,CCCCc1nc(Cl)c(CO)n1Cc1ccc(-c2ccccc2-c2nnn[nH]2)cc1,2.0
+CMP_009,COc1ccc2[nH]c(S(=O)Cc3ncc(C)c(OC)c3C)nc2c1,2.0
+CMP_010,CCC(C)(C)C(=O)OC1CC(C)C=C2C=CC(C)C(CCC3CC(O)CC(=O)O3)C12,2.0

@@ -1,0 +1,33 @@
+{
+  "id": "ana_23_synonym_resolution",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a 30-row CSV where each row references a compound by exactly ONE of: brand name, International Nonproprietary Name (INN), or CAS number. Columns: Row_ID, Identifier, Identifier_Type (one of brand/inn/cas).\n\nSeveral rows refer to the same underlying compound through different naming systems. Resolve every row to a canonical identifier (PubChem CID), then report which rows collapse together.\n\nUse PubChem / ChEBI synonym lookups — brand<->INN mappings are NOT derivable from SMILES or local RDKit.\n\nStore:\n- `n_unique_compounds` (int): count of distinct canonical CIDs across all 30 rows.\n- `mapping_dict` (dict): {Row_ID: canonical_cid_str}.\n- `duplicate_groups` (list[list[str]]): groups of Row_IDs that map to the same CID, excluding singletons.\n\nInput CSV at `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/synonym_resolution.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "n_unique_compounds",
+        "min": 8,
+        "max": 12,
+        "label": "n_unique_in_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["pubchem_synonyms", "chebi_synonyms", "identifier_resolution", "tool_use"],
+    "requires_external_lookup": true,
+    "expected_tool_substrings": ["PubChem", "synonym"],
+    "notes": "Exact n_unique_compounds pinned by generator. Checks intentionally loose pending GT capture."
+  }
+}

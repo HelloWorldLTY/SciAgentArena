@@ -1,0 +1,9 @@
+Disease,MONDO_ID,UniProt_Target_ID,Association_Score
+Alzheimer disease,MONDO:0004975,P30561,0.94
+Alzheimer disease,MONDO:0004975,Q9Z0P7,0.93
+Alzheimer disease,MONDO:0004975,P20760,0.91
+Alzheimer disease,MONDO:0004975,Q5XIE8,0.90
+Alzheimer disease,MONDO:0004975,P10637,0.89
+Parkinson disease,MONDO:0005180,P37840,0.87
+Type 2 diabetes mellitus,MONDO:0005148,P01308,0.92
+Breast carcinoma,MONDO:0007254,P04637,0.95

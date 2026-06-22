@@ -1,0 +1,43 @@
+{
+  "id": "ana_15_replicate_qc",
+  "type": "chemical_data_analysis",
+  "prompt": "You have a replicate assay dataset. Assess data quality and report summary activity statistics for compounds with reliable measurements.\n\nColumns: Compound_ID, pIC50, Replicate, Plate_ID\n\nStore:\n- `n_flagged` (int): number of compounds with unreliable replicate measurements\n- `mean_pIC50_reliable` (float): mean pIC50 across compounds that pass QC (average of per-compound means)\n- `artifact_plate` (str): Plate_ID most associated with unreliable compounds\n\nLoad data from _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/replicate_qc.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_flagged",
+        "expected": 3,
+        "label": "n_flagged_value"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "mean_pIC50_reliable",
+        "min": 7.1255,
+        "max": 7.5255,
+        "label": "mean_pIC50_reliable_range"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "artifact_plate",
+        "expected": "PLATE_A",
+        "label": "artifact_plate_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "concepts": ["replicate_qc", "coefficient_of_variation", "data_quality", "groupby", "flagging"],
+    "notes": "Tier 2 — agents must compute CV per compound to identify unreliable measurements and trace them to a specific plate."
+  }
+}

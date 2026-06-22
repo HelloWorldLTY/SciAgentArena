@@ -1,0 +1,34 @@
+{
+    "id": "reg_03_pains_v1",
+    "type": "chemical_safety_assessment",
+    "prompt": "You are given a training dataset ['training_data_file_path'] and a query dataset ['query_molecules_file_path'].\n\nThe training dataset contains the following columns:\n- id: PubChem compound identifier\n- labels: binary class label (1 = PROM_PAINS compound, 0 = DCM_compound)\n- smiles: SMILES representation of the molecule\n\nDefinitions:\n- PROM_PAINS (label = 1): Promiscuous Pan-Assay Interference Compounds.\n- DCM_compound (label = 0): Dark Chemical Matter compounds.\n\nTask:\n Train a classification model using the training dataset to predict the label for each query molecule (1 or 0).\n\nOutput Requirements (STRICT):\n- Output ONLY valid JSON.\n- Do NOT include explanations or extra text.\n- The output must be a list of objects, one per query molecule.\n- Each object must follow this exact schema (do NOT change field names):\n[\n  {\n    \"id\": \"<ID>\",\n    \"smiles\": \"<SMILES>\",\n    \"labels\": 0 or 1\n  }\n]\n\nAdditional Constraints:\n- Use the exact id and smiles from the query dataset.\n- \"labels\" must be an integer (0 or 1), not a string.\n- Do not output probabilities or additional fields.\n- Ensure the JSON is strictly valid and parsable.\n- Output one prediction per query molecule (no duplicates, no missing entries).",
+    "input": {
+        "query_molecules_file_path": "tasks_batch/data/pains_classification_query_mols.csv",
+        "training_data_file_path": "tasks_batch/data/pains_classification_training_data.csv",
+        "description": "A dataset of SMILES strings including promiscuous PAINS and dark chemical matter PAINS"
+    },
+    "constraints": {
+        "timeout_seconds": 60,
+        "forbidden_imports": [
+            "requests",
+            "urllib",
+            "http",
+            "openai",
+            "anthropic"
+        ],
+        "output_format": "json_stdout"
+    },
+    "scoring_logic": {
+        "scorer": "oracle_regulator.score_pains_v1",
+        "ground_truth_file": "scorers/data/pains_classification_ground_truth.csv"
+    },
+    "metadata": {
+        "difficulty": "medium",
+        "concepts": [
+            "PAINS",
+            "SMARTS matching",
+            "substructure search",
+            "regulatory filtering"
+        ]
+    }
+}

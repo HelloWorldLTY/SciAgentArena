@@ -1,0 +1,38 @@
+{
+  "id": "ana_25_admet_panel",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of 50 lead compounds with SMILES and internal potency ranking (columns: Lead_ID, SMILES, Internal_Rank). Rank them by ADMET liability using ADMETAI and SwissADME predictions. Local RDKit can compute physchem descriptors but CANNOT produce the hERG/CYP/PAMPA ML predictions — those require the ADMETAI and SwissADME tools.\n\nProduce three top-5 lists by highest-to-lowest predicted liability:\n- `top5_by_herg_risk` (list[str] of Lead_ID): top 5 by ADMETAI hERG blockade probability.\n- `top5_by_cyp_risk` (list[str] of Lead_ID): top 5 by ADMETAI CYP3A4 inhibition probability.\n- `consensus_top3` (list[str] of Lead_ID): the 3 Lead_IDs appearing in BOTH top5 lists. If fewer than 3 appear in both, pad with the next-highest average-risk Lead_IDs.\n\nInput CSV at `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/admet_leads.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 600,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "shape_first_dim",
+        "variable": "top5_by_herg_risk",
+        "expected_n": 5,
+        "label": "herg_top5_length"
+      },
+      {
+        "assertion": "shape_first_dim",
+        "variable": "top5_by_cyp_risk",
+        "expected_n": 5,
+        "label": "cyp_top5_length"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["admetai", "swissadme", "herg", "cyp", "consensus_ranking", "tool_use"],
+    "requires_external_lookup": true,
+    "expected_tool_substrings": ["ADMETAI", "SwissADME"],
+    "notes": "GT top-5 reference lists await admet-ai package install. For MVP, scoring verifies list shape only; once admet-ai is available, re-run the generator and tighten with list_jaccard_min."
+  }
+}

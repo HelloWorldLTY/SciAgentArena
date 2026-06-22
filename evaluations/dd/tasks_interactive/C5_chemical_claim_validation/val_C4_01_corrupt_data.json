@@ -1,0 +1,86 @@
+{
+  "id": "val_C4_01_corrupt_data",
+  "type": "chemical_claim_validation",
+  "prompt": "You are developing a binary classifier to predict hERG channel blockage for early-stage cardiac safety screening. You are given a training dataset (columns: ID, smiles, activity, potency) contains binary labels (activity = 1 means active hERG blocker, IC50 \u2264 10 \u00b5M; activity = 0 means inactive) and measured pIC50 values (-log_{10} IC50, molar). A query file lists new compounds to screen (columns: ID, smiles only).\n\nYour task: train a binary classifier on the training data and generate hERG activity predictions for the query molecules.\n\nProduce the following outputs:\n- `predicted_activities` (list[int]): predicted activity label (0 or 1) for each query molecule, in order.\n- `n_predicted_active` (int): count of query molecules predicted active.\n- `is_model_valid` (bool): True if the training data is fit for purpose; False if you detect a data quality problem that would make predictions unreliable.\n- `conclusion_status` (str): from the shared answer pool (e.g. 'valid_answer', 'inconclusive_data_quality').\n- `failure_mode` (str): from the shared answer pool \u2014 the primary defect detected, or 'none' if data is clean.\n- `recommended_action` (str): from the shared answer pool \u2014 what the lab should do next.\n- `issue_detected` (str): concise free-text description of any detected problem, or 'none' if data is clean.\n\nAccess files via: `_TASK_INPUT['training_file_path']` and `_TASK_INPUT['query_file_path']`.",
+  "input": {
+    "training_file_path": "tasks_interactive/data/val_C4_01_corrupt_herg_training_data.csv",
+    "query_file_path": "tasks_interactive/data/val_C4_01_query_mols.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "is_model_valid",
+        "expected": false,
+        "label": "correctly_flags_invalid_dataset",
+        "weight": 2.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "data_corruption",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "correctly_flags_invalid_dataset"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_other",
+          "answer_with_caveat"
+        ],
+        "label": "correct_conclusion_status",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      },
+      {
+        "assertion": "contains_any",
+        "variable": "issue_detected",
+        "keywords": [
+          "label",
+          "noise",
+          "corrupt",
+          "incorrect",
+          "inconsistent",
+          "mislabel",
+          "flip",
+          "unreliable",
+          "annotation",
+          "data quality"
+        ],
+        "label": "identifies_corruption_in_text",
+        "weight": 1.0
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "category": 5,
+    "concepts": [
+      "label_noise",
+      "data_quality",
+      "annotation_errors",
+      "classifier_validity"
+    ],
+    "ground_truth_failure_mode": "data_corruption",
+    "requires_external_lookup": false,
+    "notes": "20% of binary activity labels were randomly flipped (numpy seed 42). The corruption is detectable by checking internal consistency: activity=1 rows should have high pIC50 (> 5) and activity=0 rows should have low pIC50 (< 5). With ~223 suspicious label/potency pairs, a careful agent will refuse to train and flag label noise."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "ana_13_prioritization",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of 60 screening compounds with columns: Compound_ID, pIC50_target, pIC50_off_target, Cluster (scaffold group A-F). Your task is to apply a sequential multi-criteria prioritization workflow.\n\nStep 1 — Activity filter:\n- Keep only compounds with pIC50_target >= 7.0\n- Store the count as `n_active`\n\nStep 2 — Selectivity filter:\n- From the active compounds, keep only those with pIC50_off_target < 6.0 (lower off-target activity is better)\n- Store the count as `n_selective`\n\nStep 3 — Diversity filter:\n- From the selective compounds, pick at most 2 compounds per Cluster (the top 2 by pIC50_target, descending)\n- Store the count as `n_final`\n- Store the sorted list of final Compound_IDs as `final_ids` (a Python list of strings, sorted alphabetically)\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: Compound_ID, pIC50_target, pIC50_off_target, Cluster.",
+  "input": {
+    "file_path": "tasks_interactive/data/prioritization.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_active",
+        "expected": 25,
+        "label": "n_active_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_selective",
+        "expected": 25,
+        "label": "n_selective_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_final",
+        "expected": 12,
+        "label": "n_final_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["sequential_filtering", "multi_criteria_prioritization", "groupby", "ranking", "scaffold_diversity"],
+    "notes": "Tier 3 — multi-step prioritization workflow. The agent must apply 3 sequential filters (activity → selectivity → diversity cap per scaffold). Tests procedural workflow competence with structured intermediate artifacts at each step."
+  }
+}

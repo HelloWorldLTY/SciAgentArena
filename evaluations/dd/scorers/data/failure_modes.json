@@ -1,0 +1,241 @@
+{
+  "_schema_version": "1.0",
+  "_description": "Shared controlled vocabulary for Competency 5 tasks. Collaborators should extend this file when adding new tasks. Keep entries alphabetically sorted within each section.",
+  "status_values": {
+    "_doc": "Allowed values for the agent's conclusion-validity boolean. Every C5 task must include exactly one variable from this list.",
+    "values": [
+      "can_rank",
+      "can_conclude",
+      "is_analysis_clean",
+      "is_conclusion_reliable",
+      "is_result_valid",
+      "is_sar_reliable",
+      "is_trend_genuine",
+      "is_model_valid"
+    ],
+    "type": "bool",
+    "correct_value_for_c5": false,
+    "naming_convention": "is_<noun>_<adjective> or can_<verb>; always a bool; True = agent endorses the conclusion, False = agent flags the data as compromised"
+  },
+  "failure_modes": {
+    "_doc": "Canonical failure mode categories. Each task's metadata.failure_mode should map to exactly one primary category. New categories can be added by collaborators.",
+    "categories": {
+      "mixed_units": {
+        "description": "Data contains values in different units (e.g., nM vs uM) without clear labelling or harmonisation.",
+        "keywords": [
+          "unit",
+          "mixed",
+          "nM",
+          "uM",
+          "micromolar",
+          "nanomolar",
+          "ambiguous",
+          "scale",
+          "conversion",
+          "inconsistent"
+        ],
+        "example_task": "val_C2_01_hidden_units"
+      },
+      "insufficient_sample_size": {
+        "description": "Too few observations per group to support a reliable statistical comparison.",
+        "keywords": [
+          "sample size",
+          "N=2",
+          "insufficient",
+          "confound",
+          "underpowered",
+          "statistical",
+          "sparse",
+          "small",
+          "few",
+          "limited"
+        ],
+        "example_task": "val_C2_02_sparse_sar"
+      },
+      "misaligned_annotation": {
+        "description": "Metadata or annotation table is misaligned or shuffled relative to the data it describes.",
+        "keywords": [
+          "scaffold",
+          "alignment",
+          "mismatch",
+          "annotation",
+          "inconsistent",
+          "wrong",
+          "mapping",
+          "shuffled",
+          "misaligned"
+        ],
+        "example_task": "val_C2_03_alias_sar"
+      },
+      "identity_duplicate": {
+        "description": "The same molecular entity appears under different identifiers, creating false apparent differences.",
+        "keywords": [
+          "duplicate",
+          "identical",
+          "same molecule",
+          "same SMILES",
+          "artifact",
+          "redundant",
+          "copy",
+          "repeated"
+        ],
+        "example_task": "val_C2_04_false_cliff"
+      },
+      "batch_drift": {
+        "description": "Systematic assay shift across batches or time points that confounds real signal.",
+        "keywords": [
+          "drift",
+          "batch",
+          "reference",
+          "control",
+          "confound",
+          "assay",
+          "systematic",
+          "normalization",
+          "artifact",
+          "offset"
+        ],
+        "example_task": "val_C2_05_confounded_trend"
+      },
+      "memory_conflict": {
+        "description": "A claim in the prompt disagrees with what an authoritative external database reports; the agent should not trust parametric memory.",
+        "keywords": [
+          "conflict",
+          "disagree",
+          "contradict",
+          "chembl",
+          "pubchem",
+          "external",
+          "authoritative",
+          "lookup",
+          "verify",
+          "mismatch",
+          "memory"
+        ],
+        "example_task": "val_C2_06_claim_verification"
+      },
+      "stale_knowledge": {
+        "description": "Information in the prompt or the model's training predates a recent revision in the authoritative source; current source differs.",
+        "keywords": [
+          "stale",
+          "outdated",
+          "revised",
+          "updated",
+          "current",
+          "latest",
+          "release",
+          "superseded",
+          "chembl",
+          "recent"
+        ],
+        "example_task": "val_C2_07_stale_vs_current"
+      },
+      "low_confidence_assay": {
+        "description": "The underlying assay has a low confidence / validation flag in ChEMBL; conclusions drawn from it are unreliable.",
+        "keywords": [
+          "confidence",
+          "low_confidence",
+          "assay_confidence",
+          "unreliable",
+          "flag",
+          "validation",
+          "quality",
+          "tier",
+          "score"
+        ],
+        "example_task": "val_C2_09_retracted_assay"
+      },
+      "prediction_measurement_mismatch": {
+        "description": "Model-predicted property disagrees meaningfully with a provided measurement; neither can be fully trusted without replication.",
+        "keywords": [
+          "predict",
+          "measurement",
+          "discrepancy",
+          "model",
+          "admetai",
+          "swissadme",
+          "residual",
+          "mismatch",
+          "disagree",
+          "delta"
+        ],
+        "example_task": "val_C2_11_prediction_vs_measurement"
+      },
+      "ontology_scope_mismatch": {
+        "description": "A compound is asked about with a category label (e.g. kinase inhibitor) that the authoritative ontology (ChEBI) does not assign to it.",
+        "keywords": [
+          "ontology",
+          "chebi",
+          "role",
+          "class",
+          "category",
+          "scope",
+          "term",
+          "parent",
+          "annotation",
+          "classification"
+        ],
+        "example_task": "val_C2_10_ontology_scope"
+      },
+      "data_corruption": {
+        "description": "Random corruption of activity labels introduces label noise, making the dataset unreliable for training a classifier.",
+        "keywords": [
+          "label",
+          "noise",
+          "corrupt",
+          "incorrect",
+          "inconsistent",
+          "mislabel",
+          "flip",
+          "unreliable",
+          "annotation",
+          "data quality"
+        ],
+        "example_task": "val_C4_01_corrupt_data"
+      },
+      "selection_bias": {
+        "description": "Only compounds meeting a performance threshold were reported or advanced to subsequent rounds, so the observed trend is an artifact of selective reporting rather than genuine improvement.",
+        "keywords": [
+          "selection",
+          "bias",
+          "threshold",
+          "reporting",
+          "truncation",
+          "cherry-pick",
+          "filter",
+          "survivor",
+          "dropout",
+          "missing",
+          "artifact"
+        ],
+        "example_task": "val_C4_03_optimize_conflict"
+      }
+    }
+  },
+  "issue_detected_field": {
+    "_doc": "Every C5 task must require the agent to set an `issue_detected` (str) variable. The agent should set it to 'none' if it believes the data is clean. Scoring uses contains_any against the failure mode's keyword list.",
+    "variable_name": "issue_detected",
+    "type": "str",
+    "clean_value": "none",
+    "scoring_assertion": "contains_any"
+  },
+  "check_categories": {
+    "_doc": "Standard label prefixes for scoring checks. Use these to keep check labels consistent across tasks.",
+    "primary_refusal": "correctly_refuses_* or correctly_flags_*  \u2014 the boolean self-assessment check (weight >= 2.0)",
+    "issue_identification": "identifies_*_issue  \u2014 the keyword-match check on issue_detected (weight = 1.0)",
+    "quantitative_accuracy": "correct_*_count  \u2014 optional numeric check on a diagnostic variable (weight = 1.0)"
+  },
+  "extending_this_file": {
+    "_doc": "How collaborators should add new entries.",
+    "steps": [
+      "1. Add a new entry under failure_modes.categories with a unique key.",
+      "2. Include: description, keywords (list of 8-12 case-insensitive substrings), example_task.",
+      "3. If the task needs a new status variable name, add it to status_values.values.",
+      "4. Keep keywords specific enough to avoid false positives but broad enough that a correct diagnosis in different phrasings still matches.",
+      "5. Avoid synonyms of existing keywords in OTHER categories \u2014 each keyword should be distinctive to its failure mode.",
+      "6. Run the scorer on a few test cases to verify keyword specificity."
+    ]
+  },
+  "_canonical_source": "competency_5/schema/answer_pool.json",
+  "_documentation_status": "Documentation-only helper vocabulary. Validators and tasks should use answer_pool.json as the canonical enum source."
+}

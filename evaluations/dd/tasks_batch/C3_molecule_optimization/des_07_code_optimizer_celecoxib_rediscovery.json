@@ -1,0 +1,45 @@
+{
+  "id": "des_07_code_optimizer_celecoxib_rediscovery",
+  "type": "molecule_optimization",
+  "prompt": "Write a single self-contained Python script that implements an optimizer for the GuacaMol Celecoxib rediscovery benchmark.\n\nTask\n- Your script will be executed once against a single fixed reference molecule. Do NOT rely on any hidden state outside the runtime JSON payload.\n- At runtime the reference arrives via AGENT4S_INPUT_JSON['target_smiles_a']. Read it and design analog molecules whose ECFP4 (Morgan radius 2, count) Tanimoto similarity to the reference is as close to 1.0 as possible.\n\nBackground\n- The TDC oracle is Oracle(\"celecoxib_rediscovery\"), a [0, 1] score equal to the raw ECFP4 Tanimoto similarity between the candidate and Celecoxib. A candidate identical to Celecoxib scores 1.0; this is the standard GuacaMol setup, so the exact target IS a legitimate success.\n- Reference molecule: Celecoxib (a COX-2 selective NSAID).\n- Success criterion: oracle_score >= target_score_min (0.9).\n\nExecution environment\n- Your script will be invoked as `python agent_solution.py` by a subprocess runner.\n- It must run CPU-only. Do NOT call .cuda(), .to('cuda'), or any torch.cuda API.\n- Wall-clock timeout: 1800 seconds / 30 minutes (see constraints.timeout_seconds).\n- You may import: rdkit, numpy, scipy, networkx, pandas, sklearn, stdlib.\n- You MAY NOT import: requests, urllib, http, socket, openai, anthropic, google.\n- Do NOT download files, load remote model weights, or open network sockets.\n- Do NOT hardcode large literal SMILES libraries or known benchmark answer lists. Generate candidates programmatically (RDKit-based mutations, fragment recombination, scaffold-aware enumeration, etc.).\n\nInputs\n- Read task input from env var AGENT4S_INPUT_JSON (a JSON object). Fields:\n    tdc_oracle_name        : str   - 'celecoxib_rediscovery'\n    target_smiles_a        : str   - Celecoxib reference SMILES\n    target_score_min       : float - success threshold (0.9)\n    exclude_exact_target   : bool  - false (standard GuacaMol)\n    oracle_budget          : int   - hard cap on oracle calls (100)\n\nOracle (your ONLY scoring tool)\n- Purpose. The oracle is your single, local scoring interface. It judges one candidate SMILES against the fixed Celecoxib reference and reports whether that candidate satisfies the task (oracle_score >= target_score_min). Any SMILES you do NOT pass to oracle.score(...) is invisible to the harness; local RDKit scoring alone is not enough.\n- There is no other scoring function to call. Do NOT attempt to import or invoke any module under scorers/ other than the oracle below.\n\n- Construction (free; no budget cost):\n    from scorers.oracle_budget_guacamol import BudgetedGuacamolOracle, OracleBudgetExceededError\n    oracle = BudgetedGuacamolOracle(\n        tdc_oracle_name='celecoxib_rediscovery',\n        budget=oracle_budget,\n        target_score_min=target_score_min,\n        target_smiles_a=target_smiles_a,\n        exclude_exact_target=False,\n    )\n  Precomputed reference attributes (free):\n    oracle.target_canonical_a   : str    - canonical SMILES of Celecoxib\n    oracle.target_fp_a          : SparseIntVect - precomputed sparse-count Morgan FP (radius 2; same fingerprint type as the TDC celecoxib_rediscovery oracle)\n    oracle.calls_remaining      -> int\n\n- Call:   result = oracle.score(candidate_smiles)\n\n- Input to score():\n    candidate_smiles : str - any SMILES string; invalid, duplicate, or empty\n                             inputs are handled gracefully (still cost 1 unit).\n\n- Output dict returned by score():\n    valid              : bool       - RDKit could parse the canonicalized SMILES\n    canonical_smiles   : str|None   - canonical form of the input\n    duplicate          : bool       - same canonical as a previous score() call\n    equals_target_a    : bool       - canonical == oracle.target_canonical_a\n    equals_target_b    : bool       - always False (no second target for this task)\n    oracle_score       : float|None - TDC oracle output in [0, 1]\n    improved_ok        : bool       - oracle_score >= target_score_min\n    debug_tanimoto_primary   : float|None - free sparse-count Morgan-2 ECFP4 Tanimoto vs target (debug; matches the oracle's fingerprint type for celecoxib_rediscovery)\n    debug_tanimoto_secondary : null       - unused for this task\n    success            : bool       - improved_ok (exact target IS success here)\n    calls_used         : int        - budget units spent so far (incl. this call)\n    budget             : int        - total allowed (= oracle_budget)\n    error              : str|None   - populated on invalid / failed input\n\n- Cost and determinism:\n    - Every score() call costs exactly 1 unit (including invalid / duplicate / empty).\n    - score() is deterministic per canonical SMILES (still costs 1 unit per call).\n    - When the budget is exhausted, further calls raise OracleBudgetExceededError.\n\n- You may use RDKit directly for any local operation (parsing, fingerprints, similarity, fragment edits). Only oracle.score(...) counts against the budget.\n\nAllowed optimizer families (pick one or combine)\n- Genetic algorithm over molecular graphs / SMILES with crossover and mutation\n- Simulated annealing or hill-climbing on local edits (atom / bond / functional-group changes)\n- Beam search guided by free RDKit Tanimoto checks before committing oracle budget\n- Matched molecular pairs / fragment replacement around the reference scaffold\n- Scaffold-constrained enumeration via BRICS / RECAP decomposition\n\nDisallowed\n- Training a neural generator (VAE / RL / diffusion) inside the script\n- Loading pretrained neural-network weights from disk or the network\n- Exhaustive enumeration of all SMILES strings\n- Hardcoding large literal SMILES answer lists\n\nHow your submission is finalized (you do NOT need to print anything)\n- Every `oracle.score(...)` call is automatically appended as one JSON line to the harness's optimizer stream. You do not manage this file yourself.\n- After your script exits (or hits the timeout), the harness looks at every candidate you passed to `oracle.score(...)`, keeps the successes (oracle_score >= target_score_min), sorts them by oracle_score descending, and retains the top 10 as your final submission.\n- Duplicates and invalids still consume budget but are filtered out for free. You do NOT need to deduplicate, rank, or print a final list - just call `oracle.score(...)` on the candidates you want evaluated.\n- stdout is ignored. Use stderr for any debugging / logging.\n\nRequired docstring\n- The top of your file must be a one-paragraph docstring naming the algorithm you chose and the key hyperparameters (population size, mutation rate, beam width, etc.).",
+  "input": {
+    "tdc_oracle_name": "celecoxib_rediscovery",
+    "target_smiles_a": "CC1=CC=C(C=C1)C1=CC(=NN1C1=CC=C(C=C1)S(N)(=O)=O)C(F)(F)F",
+    "target_score_min": 0.9,
+    "exclude_exact_target": false,
+    "oracle_budget": 100
+  },
+  "constraints": {
+    "timeout_seconds": 1800,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "socket",
+      "openai",
+      "anthropic",
+      "google"
+    ],
+    "output_format": "oracle_stream"
+  },
+  "scoring_logic": {
+    "scorer": "guacamol_goal_scorer.score_guacamol_goal",
+    "k": 10,
+    "tdc_oracle_name": "celecoxib_rediscovery",
+    "target_smiles_a": "CC1=CC=C(C=C1)C1=CC(=NN1C1=CC=C(C=C1)S(N)(=O)=O)C(F)(F)F",
+    "target_score_min": 0.9,
+    "exclude_exact_target": false,
+    "basic_score_mode": "allow_target"
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": [
+      "code_generation",
+      "optimizer_design",
+      "rediscovery",
+      "guacamol",
+      "budgeted_oracle"
+    ],
+    "notes": "GuacaMol Celecoxib rediscovery as a code-optimizer task. The LLM writes a Python optimizer that searches Celecoxib-like molecules under a budgeted ECFP4-Tanimoto oracle. Standard GuacaMol setup: exact target counts as success (basic_score_mode='allow_target' so the format ratio does not penalise it), and the agent is encouraged to NOT hardcode the target."
+  }
+}

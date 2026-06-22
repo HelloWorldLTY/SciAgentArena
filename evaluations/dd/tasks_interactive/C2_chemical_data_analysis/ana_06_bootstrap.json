@@ -1,0 +1,36 @@
+{
+  "id": "ana_06_bootstrap",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of assay results with Compound_ID, pIC50, and Replicate columns (~100 measurements from 30 compounds with 2-4 replicates each). Compute a bootstrap 95% confidence interval for the mean pIC50 across all measurements. Use 10000 bootstrap samples with numpy random seed 42 (np.random.seed(42)).\n\nStore these variables:\n- `ci_lower` (float): lower bound of the 95% CI\n- `ci_upper` (float): upper bound of the 95% CI\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: Compound_ID, pIC50, Replicate.",
+  "input": {
+    "file_path": "tasks_interactive/data/assay_results.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "ci_lower",
+        "min": 6.7,
+        "max": 7.1,
+        "label": "ci_lower_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "ci_upper",
+        "min": 6.8,
+        "max": 7.3,
+        "label": "ci_upper_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": ["bootstrap", "confidence_interval", "statistics", "assay_data"]
+  }
+}

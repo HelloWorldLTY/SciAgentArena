@@ -1,0 +1,28 @@
+{
+  "id": "ana_04_clean",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV with 50 rows of SAR data. Some rows have invalid LogP values (NaN, empty strings, or non-numeric strings like 'N/A' or 'error'). Clean the data by dropping all rows where LogP is not a valid number. Store the number of dropped rows in an integer variable called `n_dropped`.\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: ID, SMILES, MW, LogP, pIC50.",
+  "input": {
+    "file_path": "tasks_interactive/data/dirty_sar.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_dropped",
+        "expected": 7,
+        "label": "n_dropped_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "easy",
+    "concepts": ["data_cleaning", "missing_values", "pandas"]
+  }
+}

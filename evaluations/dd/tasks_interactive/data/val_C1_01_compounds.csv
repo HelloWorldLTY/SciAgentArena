@@ -1,0 +1,11 @@
+Compound_ID,SMILES
+MX_001,CC(=O)Oc1ccccc1C(=O)O
+MX_002,CCOc1ccccc1C(=O)O
+MX_003,COc1ccccc1C(=O)N
+MX_004,CCN(CC)CC
+MX_005,Cc1ccccc1
+MX_006,CC(C)Oc1ccccc1
+MX_007,CC(=O)Nc1ccccc1
+MX_008,CN(C)c1ccccc1
+MX_009,CCOC(=O)c1ccccc1
+MX_010,CC(=O)Oc1ccccc1C(=O)O.CN(C)C=O

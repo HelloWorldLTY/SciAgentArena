@@ -1,0 +1,29 @@
+{
+  "id": "ana_08_vis_ic50",
+  "type": "chemical_data_analysis",
+  "prompt": "Look at the dose-response curve image provided. It shows a sigmoidal curve of concentration (nM, x-axis, log scale) vs response (%, y-axis). Guide lines are drawn at 50% response and at the IC50 value. Estimate the IC50 value (the concentration at which response equals 50%) from the plot.\n\nReturn a JSON object with one key: 'ic50' (numeric, in nM).",
+  "input": {
+    "image_path": "tasks_interactive/data/vision/dose_response.png"
+  },
+  "constraints": {
+    "timeout_seconds": 30,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_vision_json",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "key": "ic50",
+        "expected": 45,
+        "tolerance": 5,
+        "label": "ic50_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": ["dose_response", "IC50", "pharmacology", "plot_reading"]
+  }
+}

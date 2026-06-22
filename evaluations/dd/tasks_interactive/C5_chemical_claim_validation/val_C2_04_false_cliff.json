@@ -1,0 +1,68 @@
+{
+  "id": "val_C2_04_false_cliff",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV of ~210 compounds with columns Compound_ID, SMILES, pIC50, and Series. Identify activity cliffs: pairs of compounds with Tanimoto similarity >= 0.8 (Morgan fingerprints, radius=2, nBits=2048) AND |delta_pIC50| >= 2.0.\n\nReport the number of cliff pairs and assess whether all identified cliffs are genuine SAR features or if some are artifacts of the dataset structure.\n\nStore these task-specific variables:\n- `n_cliff_pairs` (int): total number of activity cliff pairs identified\n- `duplicate_smiles_count` (int): number of rows whose SMILES is not unique in the dataset, i.e. `len(df) - df['SMILES'].nunique()`\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_false_cliff.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "duplicate_smiles_count",
+        "expected": 190,
+        "tolerance": 2,
+        "label": "counts_duplicates",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "identity_duplicates",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "counts_duplicates"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "category": 5,
+    "concepts": [
+      "structure_deduplication",
+      "activity_cliff",
+      "fingerprint_analysis"
+    ],
+    "failure_mode": "Duplicate SMILES under different IDs inflate cliff count. duplicate_smiles_count ground truth = 190 (210 rows, 20 unique SMILES).",
+    "ground_truth_failure_mode": "identity_duplicates",
+    "source_task": "ana_17_activity_cliff"
+  }
+}

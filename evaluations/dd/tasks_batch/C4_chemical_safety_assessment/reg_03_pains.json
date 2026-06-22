@@ -1,0 +1,35 @@
+{
+    "id": "reg_03_pains",
+    "type": "chemical_safety_assessment",
+    "prompt": "You are given a dataset of molecules in ['query_molecules_file_path']. The CSV has the following columns: 'Compound No.' (molecule ID), 'PubChem ID', 'ChEMBL ID', and 'smiles' (SMILES string). Use these exact column names when reading the file.\n\nTask:\nIdentify whether each molecule is a Pan-Assay Interference Compound (PAINS). For each molecule:\n1. Determine whether it contains a PAINS motif.\n2. If yes, identify the specific motif or substructure.\n3. Assign a decision based on the following rules:\n   - Discard: clear PAINS motif with high likelihood of assay interference\n   - Uncertain: borderline or weak PAINS signal\n   - Accept: no evidence of PAINS liability\n\nOutput Requirements (STRICT):\n- Output ONLY valid JSON.\n- Do NOT include explanations or extra text.\n- The output must be a list of objects, one per molecule.\n- Each object must follow this exact schema:\n[\n  {\n    \"molecule_id\": \"<ID>\",\n    \"is_pains\": true or false,\n    \"motif\": \"<PAINS motif name or 'None'>\",\n    \"decision\": \"Discard\" or \"Uncertain\" or \"Accept\"\n  }\n]\n\nAdditional Constraints:\n- If is_pains is false, motif must be \"None\" and decision must be \"Accept\".\n- Use consistent motif naming (e.g., 'rhodanine', 'catechol', 'quinone').\n- Do not output multiple motifs; select the most dominant one.\n- Ensure the JSON is strictly valid and parsable.",
+    "input": {
+        "query_molecules_file_path": "tasks_batch/data/pains_query_mols.csv",
+        "description": "A dataset of SMILES strings including PAINS and no PAINS"
+    },
+    "constraints": {
+        "timeout_seconds": 60,
+        "forbidden_imports": [
+            "requests",
+            "urllib",
+            "http",
+            "openai",
+            "anthropic",
+            "torch",
+            "tensorflow"
+        ],
+        "output_format": "json_stdout"
+    },
+    "scoring_logic": {
+        "scorer": "oracle_regulator.score_pains",
+        "ground_truth_file": "scorers/data/pains_ground_truth.csv"
+    },
+    "metadata": {
+        "difficulty": "medium",
+        "concepts": [
+            "PAINS",
+            "SMARTS matching",
+            "substructure search",
+            "regulatory filtering"
+        ]
+    }
+}

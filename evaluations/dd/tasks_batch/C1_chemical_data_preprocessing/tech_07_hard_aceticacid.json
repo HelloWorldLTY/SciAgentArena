@@ -1,0 +1,39 @@
+{
+  "id": "tech_07_hard_aceticacid",
+  "type": "chemical_data_preprocessing",
+  "prompt": "Role: You are an Advanced Cheminformatics Technician.\\nGiven data: Use the provided input JSON (field: file_path) to load a CSV with columns ID and PDB_PATH. Note: These PDB files are heavy-atom-only coordinates (they lack hydrogens, CONECT records, and explicit charge labels).\\nYour task: The molecules exist in a physiological environment at pH 7.4. You must computationally deduce the correct chemical topology and formal charge strictly from the available 3D spatial coordinates. Return ONLY a JSON list with schema [{\"ID\": \"...\", \"Formal_Charge\": int|null}]. If parsing fails, return null for that ID. Do not return code or explanations.",
+  "input": {
+    "file_path": "tasks_batch/data/Formal_Charge_hard_001.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.score_formal_charge_strict",
+    "ground_truth_file": "scorers/data/Formal_Charge_hard_001_ground_truth.csv",
+    "target_column": "Formal_Charge",
+    "merge_key": "ID",
+    "tolerance": 0.0
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": [
+      "formal_charge",
+      "acetic_acid",
+      "heavy_atom_cloud",
+      "graph_reconstruction",
+      "missing_hydrogens",
+      "strict_json_output"
+    ]
+  }
+}

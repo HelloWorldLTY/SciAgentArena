@@ -1,0 +1,57 @@
+{
+  "id": "ana_19_comparative_analysis",
+  "type": "chemical_data_analysis",
+  "prompt": "You have a compound library with activity labels. Apply two molecular clustering pipelines to this dataset and compare their ability to enrich for active compounds.\n\nRoute A: Morgan fingerprints (radius=2, nBits=1024) + Butina clustering (Tanimoto similarity cutoff=0.4)\nRoute B: Morgan fingerprints (radius=3, nBits=2048) + k-means (k=10) on t-SNE coordinates (perplexity=30, random_state=42, max_iter=300); use random_state=42, n_init=10 for k-means\n\nFor each route, compute active enrichment in the largest cluster: (fraction active in largest cluster) / (fraction active overall). Then identify which compounds fall in Route A's largest cluster but not Route B's.\n\nColumns: Compound_ID, SMILES, pIC50, Active\n\nStore:\n- `route_a_n_clusters` (int): number of clusters from Route A\n- `route_b_n_clusters` (int): number of clusters from Route B\n- `route_a_enrichment` (float): active enrichment for Route A's largest cluster\n- `route_b_enrichment` (float): active enrichment for Route B's largest cluster\n- `better_route` (str): 'A' or 'B'\n- `n_divergent` (int): compounds in Route A's largest cluster but not Route B's\n\nLoad data from _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/comparative_analysis.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "route_a_n_clusters",
+        "expected": 39,
+        "label": "route_a_n_clusters_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "route_b_n_clusters",
+        "expected": 10,
+        "label": "route_b_n_clusters_value"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "route_a_enrichment",
+        "min": 0.8788,
+        "max": 0.9788,
+        "label": "route_a_enrichment_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "route_b_enrichment",
+        "min": 0.9588,
+        "max": 1.0588,
+        "label": "route_b_enrichment_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "n_divergent",
+        "min": 60,
+        "max": 76,
+        "label": "n_divergent_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 4,
+    "concepts": ["clustering", "butina_clustering", "kmeans", "tsne", "fingerprints", "active_enrichment", "comparative_analysis"],
+    "notes": "Tier 3+ — agents must implement two full clustering pipelines and compare their biological enrichment performance."
+  }
+}

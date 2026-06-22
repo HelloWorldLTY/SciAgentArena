@@ -1,0 +1,23 @@
+{
+  "id": "tech_01_hard_mw",
+  "type": "chemical_data_preprocessing",
+  "prompt": "You are provided with a dataset file 'tasks_batch/data/Mass_Property_Calculation_hard_20.csv' containing a 'SMILES' column. These SMILES strings come from real-world molecular databases and may require careful preprocessing before property calculation. Write a Python script to:\n1. Load the CSV.\n2. Use RDKit to prepare each molecule in an appropriate standardized form for consistent molecular weight calculation.\n3. Calculate the standard Molecular Weight (MW) for the resulting molecule.\n4. If a SMILES is fundamentally invalid or cannot be processed reliably, output null for the MW.\n5. Output the results as a JSON list of dictionaries to stdout. Each dictionary must have keys: 'SMILES' (the exact original raw string) and 'MW' (the calculated value).",
+  "input": {
+    "file_path": "tasks_batch/data/Mass_Property_Calculation_hard_20.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http"],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.score_numeric_property",
+    "ground_truth_file": "scorers/data/Mass_Property_Calculation_hard_ground_truth_20.csv",
+    "target_column": "MW",
+    "tolerance": 0.05
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": ["rdkit", "molecular_weight", "molecular_standardization"]
+  }
+}

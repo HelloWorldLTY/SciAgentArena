@@ -1,0 +1,44 @@
+{
+  "id": "ana_12_pipeline_repair",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a CSV of 300 molecules with SMILES, pIC50, and date_tested. Your task is to detect and fix a data leakage problem, then compare model performance before and after the fix.\n\nStep 1 — Baseline (before fix):\n- Split temporally: train = date_tested < '2023-01-01', test = date_tested >= '2023-01-01'\n- Train a Random Forest regressor (n_estimators=100, random_state=42) on Morgan fingerprints (radius=2, nBits=1024) to predict pIC50\n- Compute RMSE on the test set → this is `rmse_before`\n\nStep 2 — Detect leakage:\n- Count how many unique SMILES strings appear in BOTH the train and test sets\n- Store this count as `n_leaked`\n\nStep 3 — Fix and rerun (after fix):\n- Remove all rows from the test set whose SMILES appear in the training set\n- Retrain the same Random Forest on the SAME training set\n- Compute RMSE on the cleaned test set → this is `rmse_after`\n\nStore these variables:\n- `n_leaked` (int): number of unique SMILES appearing in both train and test\n- `rmse_before` (float): test RMSE before removing leaked compounds\n- `rmse_after` (float): test RMSE after removing leaked compounds\n\nThe input CSV is at _TASK_INPUT['file_path']. Columns: SMILES, pIC50, date_tested.",
+  "input": {
+    "file_path": "tasks_interactive/data/pipeline_repair.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_leaked",
+        "expected": 15,
+        "label": "n_leaked_value"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "rmse_before",
+        "min": 0.1,
+        "max": 2.5,
+        "label": "rmse_before_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "rmse_after",
+        "min": 0.1,
+        "max": 2.5,
+        "label": "rmse_after_range"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["data_leakage", "temporal_split", "random_forest", "morgan_fingerprints", "pipeline_repair", "before_after_comparison"],
+    "notes": "Tier 3 — multi-step pipeline repair. The agent must: (1) build a baseline model, (2) detect that 15 SMILES leak across the temporal split, (3) remove leaked test rows, (4) retrain and compare RMSE. Tests workflow competence and intermediate reasoning."
+  }
+}

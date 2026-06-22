@@ -1,0 +1,107 @@
+{
+  "_schema_version": "2.2",
+  "_description": "Shared, task-agnostic answer pool for the Chemical Claim Validation category. Task ID prefixes (val_C1_/val_C2_/val_C4_) denote the paired category, not separate benchmarks. Every active task uses the same enum fields.",
+  "conclusion_status": {
+    "type": "enum",
+    "description": "The agent's epistemic stance on its own answer to the task question.",
+    "values": [
+      "valid_answer",
+      "answer_with_caveat",
+      "inconclusive_data_quality",
+      "inconclusive_insufficient_data",
+      "inconclusive_confounded",
+      "inconclusive_other",
+      "inconclusive_memory_conflict",
+      "inconclusive_low_confidence",
+      "inconclusive_stale_knowledge"
+    ],
+    "inconclusive_values": [
+      "inconclusive_data_quality",
+      "inconclusive_insufficient_data",
+      "inconclusive_confounded",
+      "inconclusive_other",
+      "inconclusive_memory_conflict",
+      "inconclusive_low_confidence",
+      "inconclusive_stale_knowledge"
+    ]
+  },
+  "failure_mode": {
+    "type": "enum",
+    "description": "The primary defect in the dataset, if any. Pick one. Use 'none' if the data is clean.",
+    "values": [
+      "none",
+      "mixed_units",
+      "insufficient_n",
+      "shuffled_annotation",
+      "identity_duplicates",
+      "batch_drift",
+      "readout_saturation",
+      "wrong_target",
+      "outlier_driven",
+      "selection_bias",
+      "stereo_ambiguity",
+      "memory_conflict",
+      "stale_knowledge",
+      "low_confidence_assay",
+      "ontology_scope_mismatch",
+      "prediction_measurement_mismatch",
+      "multi_component_smiles",
+      "metal_out_of_domain",
+      "species_mismatch",
+      "invalid_3d_geometry",
+      "steric_clash",
+      "physically_unviable_structure",
+      "invalid_structure_chemistry",
+      "data_corruption",
+      "conflicting_objectives"
+    ],
+    "ground_truth_labels": {
+      "val_C1_01_multicomponent_logp": "multi_component_smiles",
+      "val_C1_02_metal_out_of_domain_logp": "metal_out_of_domain",
+      "val_C1_03_species_mismatch_targets": "species_mismatch",
+      "val_C1_04_invalid_geometry": "invalid_3d_geometry",
+      "val_C1_05_invalid_structure_chemistry": "invalid_structure_chemistry",
+      "val_C2_01_hidden_units": "mixed_units",
+      "val_C2_02_sparse_sar": "insufficient_n",
+      "val_C2_03_alias_sar": "shuffled_annotation",
+      "val_C2_04_false_cliff": "identity_duplicates",
+      "val_C2_05_confounded_trend": "batch_drift",
+      "val_C2_06_claim_verification": "memory_conflict",
+      "val_C2_07_stale_vs_current": "stale_knowledge",
+      "val_C2_08_identifier_masquerade": "identity_duplicates",
+      "val_C2_09_retracted_assay": "low_confidence_assay",
+      "val_C2_10_ontology_scope": "ontology_scope_mismatch",
+      "val_C2_11_prediction_vs_measurement": "prediction_measurement_mismatch",
+      "val_C4_01_corrupt_data": "data_corruption",
+      "val_C4_02_mismatch": "identity_duplicates",
+      "val_C4_03_optimize_conflict": "conflicting_objectives"
+    },
+    "decoys": {
+      "readout_saturation": "Values pegged at an upper assay ceiling. Falsifier: no single-value pileup at the max.",
+      "wrong_target": "Data comes from the wrong protein target. Falsifier: Target column is uniform or uncontested.",
+      "outlier_driven": "Signal depends on a few outliers. Falsifier: trend/difference persists after decile trimming.",
+      "selection_bias": "Non-random sampling across groups. Falsifier: compound identities recur across groups.",
+      "stereo_ambiguity": "Stereocenter definitions missing or mixed. Falsifier: no stereo tokens (@, /, \\) in SMILES."
+    }
+  },
+  "recommended_action": {
+    "type": "enum",
+    "description": "What the agent recommends the lab do next. Required output for completeness; NOT scored independently.",
+    "values": [
+      "proceed_as_is",
+      "harmonize_units",
+      "collect_more_data",
+      "realign_annotations",
+      "deduplicate",
+      "normalize_to_controls",
+      "escalate_to_human",
+      "no_action_possible",
+      "verify_against_external_db",
+      "refresh_from_current_source",
+      "inspect_manually",
+      "reject_invalid_inputs",
+      "repeat_measurement",
+      "redefine_objective"
+    ]
+  }
+}

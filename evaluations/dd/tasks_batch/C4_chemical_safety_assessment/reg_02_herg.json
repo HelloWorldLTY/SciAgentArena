@@ -1,0 +1,35 @@
+{
+    "id": "reg_02_herg",
+    "type": "chemical_safety_assessment",
+    "prompt": "You are given a training dataset ['training_data_file'] and a query dataset ['query_molecules_file_path'].\n\nThe training dataset contains the following columns:\n- ID: molecule identifier\n- smiles: molecular structure\n- activity: binary label (Active = 1 indicates hERG blocker, Inactive = 0)\n- potency: -logIC50 value\n\nTask:\n1. Train a classification model using the training dataset to predict the probability of hERG blockage.\n2. Apply the trained model to each molecule in the query dataset.\n3. For each query molecule, compute the probability of being a hERG blocker (herg_probability).\n4. Assign a decision based on the following rule:\n   - Reject if herg_probability > 0.5\n   - Accept otherwise\n\nOutput Requirements (STRICT):\n- Output ONLY valid JSON.\n- Do NOT include explanations or extra text.\n- The output must be a list of objects, one per query molecule.\n- Each object must follow this exact schema:\n[\n  {\n    \"molecule_id\": \"<ID>\",\n    \"herg_probability\": <float between 0 and 1>,\n    \"decision\": \"Accept\" or \"Reject\"\n  }\n]\n\nAdditional Constraints:\n- Ensure probabilities are numeric and within [0,1].\n- Use the provided ID from the query dataset.\n- The JSON must be strictly valid and parsable.\n- Do not output any fields other than those specified.",
+    "input": {
+        "training_data_file": "tasks_batch/data/herg_training_data.csv",
+        "query_molecules_file_path": "tasks_batch/data/herg_query_mols.csv",
+        "threshold": 0.5
+    },
+    "constraints": {
+        "timeout_seconds": 120,
+        "forbidden_imports": [
+            "requests",
+            "urllib",
+            "http",
+            "openai",
+            "anthropic"
+        ],
+        "output_format": "json_stdout"
+    },
+    "scoring_logic": {
+        "scorer": "oracle_regulator.score_herg",
+        "ground_truth_file": "scorers/data/herg_ground_truth.csv",
+        "metric": "accuracy"
+    },
+    "metadata": {
+        "difficulty": "medium",
+        "concepts": [
+            "QSAR",
+            "Morgan fingerprints",
+            "cardiotoxicity",
+            "binary classification"
+        ]
+    }
+}

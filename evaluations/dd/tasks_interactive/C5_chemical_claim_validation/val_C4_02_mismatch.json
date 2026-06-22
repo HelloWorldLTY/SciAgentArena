@@ -1,0 +1,76 @@
+{
+  "id": "val_C4_02_mismatch",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a binary molecular classification dataset and want to know whether the labels are internally consistent before any modeling. The input file contains compound records with columns such as `Compound No.`, `PubChem ID`, `ChEMBL ID`, `smiles`, and `pains_binary`.\n\nYour task: check whether the dataset contains exact duplicate molecular structures with conflicting binary labels. Treat rows with the same exact `smiles` string as the same structure, regardless of differing identifiers. If the same `smiles` appears with both label values 0 and 1, that is a data integrity defect that should make the dataset unsuitable for trustworthy model evaluation.\n\nProduce the following outputs:\n- `n_unique_smiles` (int): count of distinct exact `smiles` strings in the dataset.\n- `n_conflicting_pairs` (int): count of `smiles` strings that appear more than once with contradictory `pains_binary` labels (both 0 and 1).\n- `is_model_valid` (bool): True if no conflicting duplicate-label issue is present; False if such a data integrity problem is detected.\n- `conclusion_status` (str): from the shared answer pool.\n- `failure_mode` (str): from the shared answer pool \u2014 primary defect, or 'none'.\n- `recommended_action` (str): from the shared answer pool.\n- `issue_detected` (str): concise description of any detected problem, or 'none' if data is clean.\n\nAccess the data file via `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/val_C4_02_mismatch_duplicates.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_conflicting_pairs",
+        "expected": 40,
+        "tolerance": 2,
+        "label": "detects_conflicting_pairs",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "is_model_valid",
+        "expected": false,
+        "label": "correctly_flags_invalid_dataset",
+        "weight": 2.0,
+        "requires": "detects_conflicting_pairs"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "identity_duplicates",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "correctly_flags_invalid_dataset"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "answer_with_caveat",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion_status",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "identity_duplicates",
+      "label_conflict",
+      "data_integrity",
+      "classifier_validity"
+    ],
+    "ground_truth_failure_mode": "identity_duplicates",
+    "requires_external_lookup": false,
+    "notes": "This validation task targets duplicate detection with conflicting labels. 40 exact `smiles` strings appear twice in the dataset under different identifiers with opposite `pains_binary` labels. The defect is detectable by grouping rows by exact `smiles` and checking label consistency within each group."
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "val_C2_02_sparse_sar",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV of 10 para-substituted benzamide analogues with columns: SMILES, Name, R_group, MW, pIC50.\n\nIdentify which R-group most improves activity (highest mean pIC50). Report whether this conclusion is statistically reliable.\n\nStore these task-specific variables:\n- `best_r_group` (str): R-group with highest mean pIC50\n- `mean_diff` (float): difference in mean pIC50 between best and worst R-group\n- `group_sizes` (dict[str, int]): number of compounds per R-group, computed from the data\n- `min_group_size` (int): the smallest value in group_sizes\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_sparse_sar.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "min_group_size",
+        "expected": 2,
+        "label": "computes_group_sizes",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "insufficient_n",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "computes_group_sizes"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "statistical_reasoning",
+      "sample_size",
+      "confounding"
+    ],
+    "failure_mode": "5 R-groups with 2 compounds each is underpowered for ranking; conclusion is noise",
+    "ground_truth_failure_mode": "insufficient_n",
+    "prompt_leak_fixed": "Previous prompt said 'each with 2 compounds' verbatim, leaking the answer. Now the agent must compute group_sizes from the data."
+  }
+}

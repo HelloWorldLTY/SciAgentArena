@@ -1,0 +1,40 @@
+{
+  "id": "ana_24_bindingdb_crosscheck",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given an internal activity panel of 25 compounds against a single target (columns: Compound_ChEMBL_ID, Target_Symbol, Internal_IC50_uM). Some entries may disagree with public BindingDB data by more than 1 log unit — these could be real measurement differences, data-entry errors, or mis-annotations.\n\nFor each compound, query BindingDB for public IC50 values against the stated target, compute `log10(Internal_IC50_uM) - log10(median_BindingDB_IC50_uM)`, and flag entries where `|log_delta| > 1`.\n\nStore:\n- `n_disagreements` (int): compounds flagged.\n- `worst_offender_id` (str): Compound_ChEMBL_ID with the largest `|log_delta|`.\n- `max_log_delta` (float): the largest `|log_delta|` observed.\n\nInput at `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/bindingdb_panel.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 600,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "n_disagreements",
+        "min": 2,
+        "max": 8,
+        "label": "n_disagreements_in_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "max_log_delta",
+        "min": 1.0,
+        "max": 10.0,
+        "label": "max_log_delta_plausible"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["bindingdb", "crosscheck", "data_validation", "tool_use"],
+    "requires_external_lookup": true,
+    "expected_tool_substrings": ["BindingDB"],
+    "notes": "Pinned GT: worst_offender_id and exact n_disagreements filled after generator."
+  }
+}

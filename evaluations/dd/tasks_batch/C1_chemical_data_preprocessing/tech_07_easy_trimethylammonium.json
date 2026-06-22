@@ -1,0 +1,37 @@
+{
+  "id": "tech_07_easy_trimethylammonium",
+  "type": "chemical_data_preprocessing",
+  "prompt": "Role: You are a Cheminformatics Technician.\\nGiven data: Use the provided input JSON (field: file_path) to load a CSV with columns ID and PDB_PATH. Each PDB already contains the explicit intended protonation state.\\nYour task: For each row, compute the total formal charge from the structure and return ONLY a JSON list with schema [{\"ID\": \"...\", \"Formal_Charge\": int|null}]. If parsing fails, return null for that ID. Do not return code or explanations.",
+  "input": {
+    "file_path": "tasks_batch/data/Formal_Charge_easy_002.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_chem.score_formal_charge_strict",
+    "ground_truth_file": "scorers/data/Formal_Charge_easy_002_ground_truth.csv",
+    "target_column": "Formal_Charge",
+    "merge_key": "ID",
+    "tolerance": 0.0
+  },
+  "metadata": {
+    "difficulty": "easy",
+    "concepts": [
+      "formal_charge",
+      "trimethylammonium_cation",
+      "explicit_hydrogens",
+      "strict_json_output"
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "id": "val_C2_07_stale_vs_current",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a one-row CSV (columns: Compound_ChEMBL_ID, claim_value_from_memory, claim_property). The 'claim_value_from_memory' field encodes a value that was reported in the literature at an earlier point in time. The public ChEMBL record for this compound-property may have been revised since. Your task is to fetch the current ChEMBL value and decide whether the claim is still correct.\n\nStore the task-specific variables:\n- `current_value` (float): the current ChEMBL value for the claimed property.\n- `claim_value_from_memory` (float): copy from the CSV.\n- `values_match` (bool): True iff within 0.3 log unit.\n\nAlso set `conclusion_status`, `failure_mode`, `recommended_action`, `diagnostic_evidence`.\n\nInput CSV at `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/val_07_stale.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "current_value",
+        "min": 3.5,
+        "max": 5.5,
+        "label": "computes_current_value",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "values_match",
+        "expected": false,
+        "label": "detects_stale",
+        "weight": 2.0,
+        "requires": "computes_current_value"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "stale_knowledge",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "detects_stale"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_stale_knowledge",
+          "answer_with_caveat",
+          "inconclusive_data_quality"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "category": 5,
+    "concepts": [
+      "stale_knowledge",
+      "chembl_current_value",
+      "epistemic_humility",
+      "tool_use"
+    ],
+    "ground_truth_failure_mode": "stale_knowledge",
+    "requires_external_lookup": true,
+    "expected_tool_substrings": [
+      "ChEMBL"
+    ],
+    "notes": "AWAITING D2 USER INPUT: specific (compound, claim) pair must target LLMs get wrong from training memory. Generator falls back to placeholder if D2 not provided."
+  }
+}

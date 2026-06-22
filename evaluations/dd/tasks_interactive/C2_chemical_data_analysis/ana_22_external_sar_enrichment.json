@@ -1,0 +1,47 @@
+{
+  "id": "ana_22_external_sar_enrichment",
+  "type": "chemical_data_analysis",
+  "prompt": "You have a small internal table of 20 EGFR inhibitor candidates (columns: Internal_ID, SMILES, pIC50_internal). Enrich this set by pulling public EGFR inhibitors from ChEMBL that satisfy MW < 450 Da, and compute scaffold overlap between the internal and public sets.\n\nUse ChEMBL similarity / target-activity lookups to retrieve the public inhibitor set — do NOT rely on memory. Use RDKit (available locally) to compute Murcko scaffolds for both sets.\n\nStore:\n- `n_internal_matches` (int): rows in the internal table whose scaffold matches at least one public scaffold.\n- `n_external_hits` (int): how many public inhibitors you retrieved from ChEMBL (after MW filter).\n- `shared_scaffold_fraction` (float): `len(internal_scaffolds & external_scaffolds) / len(internal_scaffolds | external_scaffolds)`.\n- `top_shared_scaffold_smiles` (str): Murcko-scaffold SMILES most common across BOTH sets combined.\n\nInput CSV at `_TASK_INPUT['file_path']`.",
+  "input": {
+    "file_path": "tasks_interactive/data/external_sar_internal.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 600,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "n_external_hits",
+        "min": 5,
+        "max": 500,
+        "label": "external_hits_in_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "shared_scaffold_fraction",
+        "min": 0.0,
+        "max": 1.0,
+        "label": "shared_scaffold_fraction_bounded"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "n_internal_matches",
+        "min": 0,
+        "max": 20,
+        "label": "internal_matches_bounded"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["chembl_similarity", "scaffold_analysis", "murcko", "tool_use"],
+    "requires_external_lookup": true,
+    "expected_tool_substrings": ["ChEMBL", "similarity"],
+    "notes": "Bounds are intentionally wide for the MVP; tighten once generator captures exact GTs. Top-scaffold SMILES left unchecked in MVP to avoid canonicalization mismatches."
+  }
+}

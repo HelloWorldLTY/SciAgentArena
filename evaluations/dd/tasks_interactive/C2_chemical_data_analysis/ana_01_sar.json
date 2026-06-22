@@ -1,0 +1,38 @@
+{
+  "id": "ana_01_sar",
+  "type": "chemical_data_analysis",
+  "prompt": "You are given a list of molecules with SMILES, names, and pIC50 values. Compute the molecular weight (MW) and LogP (Crippen) for each molecule using RDKit. Then produce a scatter plot of MW (x-axis) vs LogP (y-axis), colored by pIC50 value, with a colorbar. Requirements:\n  - X-axis label: 'Molecular Weight (Da)'\n  - Y-axis label: 'LogP'\n  - Title: 'SAR Landscape'\n  - At least 8 points visible\n  - Include a colorbar labeled 'pIC50'\nStore the figure in a variable called `fig`.",
+  "input": {
+    "molecules": [
+      {"smiles": "CCO",           "name": "ethanol",       "pIC50": 3.2},
+      {"smiles": "c1ccccc1",      "name": "benzene",       "pIC50": 4.1},
+      {"smiles": "CC(=O)O",       "name": "acetic_acid",   "pIC50": 3.5},
+      {"smiles": "CC(=O)Oc1ccccc1C(=O)O", "name": "aspirin", "pIC50": 5.8},
+      {"smiles": "Cn1c(=O)c2c(ncn2C)n(C)c1=O", "name": "caffeine", "pIC50": 4.9},
+      {"smiles": "CC(C)Cc1ccc(cc1)C(C)C(=O)O", "name": "ibuprofen", "pIC50": 6.3},
+      {"smiles": "OC(=O)c1ccccc1O", "name": "salicylic_acid", "pIC50": 5.1},
+      {"smiles": "CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C", "name": "testosterone", "pIC50": 7.2}
+    ]
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "matplotlib_figure"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_vis.check_plot_attributes",
+    "expected_plot": {
+      "x_label": "Molecular Weight (Da)",
+      "y_label": "LogP",
+      "title": "SAR Landscape",
+      "plot_type": "scatter",
+      "min_points": 8,
+      "has_colorbar": true
+    }
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": ["molecular_descriptors", "matplotlib", "scatter_plot", "SAR_analysis"],
+    "notes": "pIC50 values are fictional but plausible. Agent must compute MW and LogP itself."
+  }
+}

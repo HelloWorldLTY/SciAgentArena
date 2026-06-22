@@ -1,0 +1,57 @@
+{
+  "id": "ana_18_temporal_trend",
+  "type": "chemical_data_analysis",
+  "prompt": "You have assay data collected across multiple experimental batches. Assess whether systematic measurement drift occurred between batches and report bias-corrected activity values.\n\nColumns: Compound_ID, pIC50, Batch, Is_Reference\n\nStore:\n- `n_reference` (int): number of unique reference compounds\n- `batch2_offset` (float): systematic offset of Batch 2 relative to Batch 1\n- `batch3_offset` (float): systematic offset of Batch 3 relative to Batch 1\n- `corrected_global_mean` (float): global mean pIC50 after correcting for batch effects\n- `worst_batch` (int): batch number (2 or 3) with the largest systematic error\n\nLoad data from _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/temporal_batches.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_notebook_variables",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_reference",
+        "expected": 10,
+        "label": "n_reference_value"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "batch2_offset",
+        "min": 0.2282,
+        "max": 0.3282,
+        "label": "batch2_offset_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "batch3_offset",
+        "min": -0.2542,
+        "max": -0.1542,
+        "label": "batch3_offset_range"
+      },
+      {
+        "assertion": "value_in_range",
+        "variable": "corrected_global_mean",
+        "min": 6.8048,
+        "max": 6.9048,
+        "label": "corrected_global_mean_range"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "worst_batch",
+        "expected": 2,
+        "label": "worst_batch_value"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 3,
+    "concepts": ["batch_correction", "assay_drift", "reference_compounds", "normalization", "temporal_analysis"],
+    "notes": "Tier 3 — agents must use reference compounds to detect and correct for systematic assay drift across batches."
+  }
+}

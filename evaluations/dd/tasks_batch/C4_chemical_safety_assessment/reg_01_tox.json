@@ -1,0 +1,34 @@
+{
+  "id": "reg_01_toxicophore",
+  "type": "chemical_safety_assessment",
+  "prompt": "You are given a dataset of molecules in ['query_molecules_file_path']. Each molecule includes an ID and a SMILES string.\n\nTask:\nScreen each molecule for structural alerts (toxicophores or chemically reactive substructures) that are associated with toxicity or assay interference.\n\nCommon structural alerts include (but are not limited to):\n- Nitroaromatic groups\n- Anilines and aromatic amines\n- Michael acceptors (α,β-unsaturated carbonyls)\n- Epoxides\n- Aldehydes\n- Quinones\n- Alkyl halides\n\nFor each molecule:\n1. Identify ALL structural alerts present (if any).\n2. For each alert, provide:\n   - alert_type: standardized name of the alert (e.g., 'nitroaromatic', 'aniline', 'michael_acceptor')\n   - smarts: SMARTS pattern representing the alert\n   - match_atom_indices: list of atom indices (from the SMILES) that match the SMARTS\n   - mechanism: brief description of the toxicological or chemical reactivity mechanism (≤ 20 words)\n   - risk_level: one of 'Low', 'Medium', or 'High'\n\nOutput Requirements (STRICT):\n- Output ONLY valid JSON.\n- Do NOT include explanations or extra text.\n- The output must be a list of objects, one per molecule.\n- Each object must follow this exact schema:\n[\n  {\n    \"molecule_id\": \"<ID>\",\n    \"smiles\": \"<SMILES>\",\n    \"alerts\": [\n      {\n        \"alert_type\": \"<type>\",\n        \"smarts\": \"<SMARTS>\",\n        \"match_atom_indices\": [<int>, ...],\n        \"mechanism\": \"<short explanation>\",\n        \"risk_level\": \"Low\" or \"Medium\" or \"High\"\n      }\n    ]\n  }\n]\n\nAdditional Constraints:\n- If no alerts are found, return \"alerts\": [] for that molecule.\n- Use consistent naming for alert_type (lowercase with underscores).\n- match_atom_indices must be integers and correspond to atoms in the SMILES.\n- Do not hallucinate alerts; only report chemically plausible matches.\n- Ensure the JSON is strictly valid and parsable.",
+  "input": {
+    "query_molecules_file_path": "tasks_batch/data/toxalerts_query_mols.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 60,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_regulator.score_toxicophore",
+    "tolerance_da": 0.01,
+    "ground_truth_file": "scorers/data/toxalerts_ground_truth.csv"
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "concepts": [
+      "SMARTS",
+      "structural alerts",
+      "toxicophore"
+    ]
+  }
+}

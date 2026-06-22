@@ -1,0 +1,11 @@
+Compound_ID,SMILES
+OM_001,CC(=O)Oc1ccccc1C(=O)O
+OM_002,COc1ccccc1C(=O)N
+OM_003,CCOc1ccccc1
+OM_004,CN(C)C(=O)c1ccccc1
+OM_005,CC[Pb](C)(C)CC
+OM_006,CCN(CC)CC
+OM_007,Cc1ccccc1
+OM_008,CC(C)Oc1ccccc1
+OM_009,CC(=O)Nc1ccccc1
+OM_010,CCOC(=O)c1ccccc1

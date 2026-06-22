@@ -1,0 +1,69 @@
+{
+  "id": "val_C2_01_hidden_units",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a CSV of IC50 values for 80 compounds screened against EGFR. The columns are Compound_ID, IC50_value, and Target.\n\nRank the top 5 most potent compounds (lowest IC50 = most potent) and compute the median IC50 across all compounds.\n\nStore these task-specific variables:\n- `top_5_ids` (list of str): Compound_IDs of the 5 most potent, sorted by potency (lowest IC50 first)\n- `median_ic50` (float): median IC50 value across all compounds\n- `ic50_max_over_min` (float): ratio of the largest to smallest IC50 value in the dataset\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_hidden_units.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_in_range",
+        "variable": "ic50_max_over_min",
+        "min": 20,
+        "max": 100000000,
+        "label": "computes_ic50_ratio",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "mixed_units",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "computes_ic50_ratio"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data",
+          "inconclusive_confounded",
+          "inconclusive_other"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "tier": 1,
+    "category": 5,
+    "concepts": [
+      "unit_awareness",
+      "data_validation",
+      "safe_stopping"
+    ],
+    "failure_mode": "Mixed IC50 units (nM vs uM) without unit column; ranking is invalid without harmonization",
+    "ground_truth_failure_mode": "mixed_units",
+    "source_task": "ana_14_unit_inconsistency",
+    "source_asset": "unit_inconsistency.csv"
+  }
+}

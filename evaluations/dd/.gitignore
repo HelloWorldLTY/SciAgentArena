@@ -1,0 +1,19 @@
+# Internal docs — not distributed to users
+README_original_benchmark.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Local environment / secrets (the .env.example template stays tracked)
+.env
+.venv/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Runtime / generated outputs (avoid publishing local paths)
+results/

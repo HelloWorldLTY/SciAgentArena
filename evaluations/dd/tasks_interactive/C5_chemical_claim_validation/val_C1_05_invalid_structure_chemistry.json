@@ -1,0 +1,74 @@
+{
+  "id": "val_C1_05_invalid_structure_chemistry",
+  "type": "chemical_claim_validation",
+  "prompt": "You are given a dataset file containing columns: ID and PDB_PATH. Each PDB_PATH links to a local molecular structure file.\n\nLoad the CSV, read each PDB file, and compute the total formal charge for each molecule. \n\nStore these task-specific variables:\n\n- `formal_charges` (dict[str, int]): mapping from the exact ID to its calculated formal charge for records you would report\n- `n_structures` (int): total number of rows in the dataset\n- `n_valid_structures` (int): number of structures you judge suitable for a reportable charge calculation\n- `n_flagged_structures` (int): number of structures you would not include in the reported charge output\n- `flag_reasons` (dict[str, str]): mapping from excluded ID to a short explanation of why it was not reported\n\nIn addition, set the shared diagnostic variables `conclusion_status`, `failure_mode`, `recommended_action`, and `diagnostic_evidence` per the REQUIRED OUTPUTS block in your prompt.\n\nThe input CSV is at _TASK_INPUT['file_path'].",
+  "input": {
+    "file_path": "tasks_interactive/data/val_C1_05_structures.csv"
+  },
+  "constraints": {
+    "timeout_seconds": 120,
+    "forbidden_imports": [
+      "requests",
+      "urllib",
+      "http",
+      "openai",
+      "anthropic",
+      "torch",
+      "tensorflow"
+    ],
+    "output_format": "notebook_variables"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_validity.score_validity_task",
+    "checks": [
+      {
+        "assertion": "value_equals",
+        "variable": "n_structures",
+        "expected": 3,
+        "label": "loads_structure_manifest",
+        "weight": 1.0
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "n_flagged_structures",
+        "expected": 1,
+        "label": "detects_anomaly",
+        "weight": 1.0,
+        "requires": "loads_structure_manifest"
+      },
+      {
+        "assertion": "value_equals",
+        "variable": "failure_mode",
+        "expected": "invalid_structure_chemistry",
+        "label": "correct_failure_mode",
+        "weight": 2.0,
+        "requires": "detects_anomaly"
+      },
+      {
+        "assertion": "value_in_set",
+        "variable": "conclusion_status",
+        "allowed": [
+          "inconclusive_data_quality",
+          "inconclusive_insufficient_data"
+        ],
+        "label": "correct_conclusion",
+        "weight": 1.0,
+        "requires": "correct_failure_mode"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "hard",
+    "tier": 2,
+    "category": 5,
+    "concepts": [
+      "pdb_validation",
+      "formal_charge",
+      "chemical_sanity"
+    ],
+    "failure_mode": "Among several local structure records, one should be set aside because the structure itself is chemically unreliable even though the rest of the batch may appear usable.",
+    "ground_truth_failure_mode": "invalid_structure_chemistry",
+    "source_task": "synthetic",
+    "source_asset": "manifest_beta.csv + structure_004.pdb + structure_005.pdb + structure_006.pdb"
+  }
+}

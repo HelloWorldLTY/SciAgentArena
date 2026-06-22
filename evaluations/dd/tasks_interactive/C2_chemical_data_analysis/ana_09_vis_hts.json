@@ -1,0 +1,33 @@
+{
+  "id": "ana_09_vis_hts",
+  "type": "chemical_data_analysis",
+  "prompt": "Look at the HTS (High-Throughput Screening) 384-well plate heatmap image provided. It shows signal intensity across a 16x24 plate. Determine whether the plate shows any systematic error pattern. If so, identify the type of error.\n\nReturn a JSON object with two keys:\n- 'has_systematic_error' (boolean): true if there is a systematic error\n- 'error_type' (string): the type of error if present (e.g., 'edge_effect', 'gradient', 'column_effect')",
+  "input": {
+    "image_path": "tasks_interactive/data/vision/hts_plate_384.png"
+  },
+  "constraints": {
+    "timeout_seconds": 30,
+    "forbidden_imports": ["requests", "urllib", "http", "openai", "anthropic", "torch", "tensorflow"],
+    "output_format": "json_stdout"
+  },
+  "scoring_logic": {
+    "scorer": "oracle_interactive.score_vision_json",
+    "checks": [
+      {
+        "assertion": "is_true",
+        "key": "has_systematic_error",
+        "label": "has_error"
+      },
+      {
+        "assertion": "value_equals",
+        "key": "error_type",
+        "expected": "edge_effect",
+        "label": "error_type"
+      }
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "concepts": ["HTS", "plate_artifacts", "edge_effect", "quality_control"]
+  }
+}
