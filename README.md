@@ -22,16 +22,16 @@ SciAgentArena/
 
 ## Benchmark Domains
 
-The platform covers **7 benchmark families** with 50+ evaluation tasks:
+The platform covers **7 benchmark families** with 198 evaluation tasks:
 
 | Domain | Tasks | Key Methods |
 |--------|-------|-------------|
-| Single-Cell RNA-seq | 11 | QC, filtering, doublet detection, normalization, HVG, batch correction, clustering, DE, trajectory, perturbation |
-| Spatial Transcriptomics | 11 | Spatial neighbors, SVG detection, neighborhood enrichment |
-| Electronic Health Records | 5 | Code normalization, event extraction, outcome prediction, treatment recommendation |
-| Cross-Domain | 2 | eQTL mapping, multi-omics association |
-| Drug Discovery | 5 | ADMET, binding affinity, lead optimization, drug-target interaction, synergy |
-| Statistical Genetics | 11 | Mendelian randomization, GWAS QC, polygenic risk scores |
+| Single-Cell RNA-seq | Multi-Step | QC, filtering, doublet detection, normalization, HVG, batch correction, clustering, DE, trajectory, perturbation |
+| Spatial Transcriptomics | Multi-Step | Spatial neighbors, SVG detection, neighborhood enrichment |
+| Electronic Health Records | Single-Step, Multi-Step | Code normalization, event extraction, outcome prediction, treatment recommendation |
+| Cross-Domain | Multi-Step | eQTL mapping, multi-omics association |
+| Drug Discovery | Single-Step, Multi-Step | ADMET, binding affinity, lead optimization, drug-target interaction, synergy |
+| Statistical Genetics | Multi-Step | Mendelian randomization, GWAS QC, polygenic risk scores |
 
 ## Agents
 
