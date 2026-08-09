@@ -21,6 +21,85 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors
 
 # ---------------------------------------------------------------------------
+# 0. Inline-ground-truth numeric scorer
+# ---------------------------------------------------------------------------
+
+
+def molecular_weight_score(agent_stdout: str, task: dict) -> dict:
+    """Score agent MW predictions against an inline ground truth.
+
+    Unlike :func:`score_numeric_property`, which merges against a ground-truth
+    CSV, this reads ``task["ground_truth"]`` directly — used by the small
+    self-contained tasks that carry their expected values in the task JSON.
+
+    Expects *agent_stdout* to be a JSON object mapping SMILES → MW (float).
+    Tolerance is read from ``task["scoring_logic"]["tolerance_da"]``.
+    """
+    ground_truth: dict = task.get("ground_truth", {})
+    tolerance: float = task.get("scoring_logic", {}).get("tolerance_da", 0.01)
+    details: dict = {}
+
+    try:
+        agent_results = json.loads(agent_stdout.strip())
+    except (json.JSONDecodeError, ValueError) as exc:
+        return {
+            "validity": 0.0,
+            "correctness": 0.0,
+            "details": {"parse_error": str(exc)},
+        }
+
+    if not isinstance(agent_results, dict):
+        return {
+            "validity": 0.0,
+            "correctness": 0.0,
+            "details": {"parse_error": "Expected a JSON object (dict)"},
+        }
+
+    n_total = len(ground_truth)
+    if n_total == 0:
+        return {"validity": 1.0, "correctness": 1.0, "details": {}}
+
+    n_valid = 0
+    n_correct = 0
+
+    for smi, expected_mw in ground_truth.items():
+        entry: dict = {"expected": expected_mw}
+
+        if smi not in agent_results:
+            entry["status"] = "missing"
+            details[smi] = entry
+            continue
+
+        mol = Chem.MolFromSmiles(smi)
+        entry["smiles_valid"] = mol is not None
+
+        try:
+            agent_mw = float(agent_results[smi])
+        except (TypeError, ValueError):
+            entry["status"] = "non_numeric"
+            details[smi] = entry
+            continue
+
+        n_valid += 1
+        entry["agent_value"] = agent_mw
+
+        if abs(agent_mw - expected_mw) <= tolerance:
+            n_correct += 1
+            entry["status"] = "correct"
+        else:
+            entry["status"] = "incorrect"
+            entry["delta"] = round(agent_mw - expected_mw, 6)
+
+        details[smi] = entry
+
+    return {
+        "validity": round(n_valid / n_total, 4),
+        "correctness": round(n_correct / n_total, 4),
+        "details": details,
+    }
+
+
+# ---------------------------------------------------------------------------
 # 1. Generic Numeric Scorer (MW, LogP, TPSA, QED, etc.)
 # ---------------------------------------------------------------------------
 

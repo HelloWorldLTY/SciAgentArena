@@ -23,7 +23,7 @@ the evaluator picks the right execution mode automatically.
 The framework targets **Python 3.11–3.13**. Using [uv](https://docs.astral.sh/uv/):
 
 ```bash
-# from the code_submission/ directory
+# from the evaluations/dd/ directory
 uv venv .venv --python 3.12
 source .venv/Scripts/activate      # Windows (Git Bash); use .venv/bin/activate on macOS/Linux
 
@@ -173,7 +173,7 @@ then `python evaluate.py run <task_id> path/to/agent.py`.
 ## Layout
 
 ```
-code_submission/
+evaluations/dd/
 ├── evaluate.py            # unified CLI: list / doctor / run / aggregate / generate
 ├── registry.py            # task discovery + routing (also: python registry.py --json)
 ├── tasks_index.json       # generated manifest of all 79 tasks
