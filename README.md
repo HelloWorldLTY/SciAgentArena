@@ -1,6 +1,6 @@
 # SciAgentArena
 
-## News! We are collaborating with several foundational model providers (Qwen, Seed, Gemini, HY, etc.) to evaluate SciAgentArena. We are pleased to see that our benchmark is contributing to the advance!
+## News! We are collaborating with several LLM providers (Qwen, Seed, Gemini, HY, etc.) to evaluate SciAgentArena. We are pleased to see that our benchmark is contributing to the advance!
 
 A benchmark platform for evaluating AI agents across diverse scientific and biomedical domains. This repository provides agent implementations, standardized evaluation benchmarks, and a web-based submission interface.
 
